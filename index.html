@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<script>if(/\/pfmp$/.test(location.pathname))location.replace(location.pathname+'/'+location.search)</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#115e57">
+<title>Ma PFMP · Je cherche mon stage</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<style>
+
+/* VOICE everyday : une appli de téléphone pour des élèves de 15-16 ans, claire, une seule chose à faire par écran
+   IDEA le carnet de prospection : des pistes, des démarches notées, une prochaine action
+   PICTURE sur « Ma semaine », le compte à rebours et le défi de la semaine en barres qui se remplissent
+   COLOUR celles de Ma PFMP : fond crème, vert-bleu #115e57, pastille orange ; Accueil orange, Espace commercial (A) bleu, Prospection (B) violet
+   TYPE police système, comme Ma PFMP
+   LAYOUT une colonne de 480 px max ; barre du bas à 4 onglets autour d'un bouton + central */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f3ef,#0f1a19);--ink:light-dark(#17252b,#e6efed);--mut:light-dark(#5b6466,#a6b3b1);--teal:light-dark(#115e57,#5cc2b5);--or:#e8813a;
+--card:light-dark(#ffffff,#162523);--line:light-dark(#dcdad3,#2b3d3b);--acc:light-dark(#115e57,#5cc2b5);--acc-s:light-dark(#e1efec,#173a36);
+--ok:light-dark(#15803d,#5fd38d);--ok-s:light-dark(#e2f5e9,#173a28);--warn:light-dark(#b45309,#f0b35a);--warn-s:light-dark(#fdf0dc,#3a2c14);
+--bad:light-dark(#c0262d,#ff8a8f);--bad-s:light-dark(#fde5e5,#3d1a1d);
+--fA:light-dark(#2563a8,#86b4ef);--fAs:light-dark(#e2ecf8,#1a2b44);--fB:light-dark(#6d3fb3,#b99bf0);--fBs:light-dark(#efe7fb,#2b1f45);--fC:light-dark(#c2560c,#f5a15c);--fCs:light-dark(#fdebdc,#3d2512)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+h1,h2,h3{font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1{font-size:28px}h2{font-size:20px}h3{font-size:17px}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.mut{color:var(--mut)}.small{font-size:14px}.d{display:block}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.between{justify-content:space-between}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(23,37,43,.06)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;padding:8px 16px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-weight:700;color:var(--ink);text-decoration:none;text-align:center}
+.btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}.btn.w{width:100%}.btn.bad{color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;color:var(--acc);font-weight:700;text-decoration:underline;padding:8px 0;min-height:44px}
+label{display:block;font-size:15px;font-weight:700;margin:14px 0 6px}
+input,select,textarea{width:100%;min-height:48px;font-size:16px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
+textarea{min-height:76px}
+.st{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.st.ok{background:var(--ok-s);color:var(--ok)}.st.wa{background:var(--warn-s);color:var(--warn)}.st.no{background:var(--bad-s);color:var(--bad)}.st.nv{background:var(--acc-s);color:var(--acc)}
+.chip{display:inline-block;font-size:13px;font-weight:700;padding:2px 9px;border-radius:99px;color:var(--f);background:var(--fs);white-space:nowrap}
+/* en-tête et barre du bas */
+.hdr{position:sticky;top:0;z-index:5;background:var(--teal);color:#fff;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px}
+.hdr .in{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lg{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px}
+.lg span{position:relative;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#fff;color:#115e57;font-weight:800;font-size:19px}
+.lg i{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--or)}
+.help{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.7);background:none;color:#fff;font-weight:800;font-size:18px}
+.demo{max-width:480px;margin:0 auto;padding:8px 16px 0;display:flex;gap:6px;overflow-x:auto;align-items:center;font-size:13px;color:var(--mut)}
+.demo button{flex:none;min-height:34px;padding:4px 10px;border-radius:99px;border:1px dashed var(--line);background:none;font-size:13px;font-weight:700;color:var(--mut)}
+.demo button.on{border-style:solid;border-color:var(--acc);color:var(--acc);background:var(--acc-s)}
+.app{max-width:480px;margin:0 auto;padding:4px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+.scr{display:none}.scr.on{display:block}
+@media (prefers-reduced-motion:no-preference){.scr.on{animation:in .3s ease}}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:4px 6px calc(4px + env(safe-area-inset-bottom,0px))}
+.nav>div{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end}
+.nav button{border:0;background:none;min-height:56px;font-size:12px;font-weight:700;color:var(--mut);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:12px}
+.nav button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav button.on{color:var(--teal)}
+.nav .plus span{display:grid;place-items:center;width:58px;height:58px;margin-top:-26px;border-radius:50%;background:var(--or);color:#fff;font-size:34px;font-weight:400;line-height:1;box-shadow:0 4px 12px rgba(0,0,0,.2),0 0 0 4px var(--card)}
+.nav .plus{color:var(--ink)}
+/* ma semaine */
+.hello{font-size:26px;margin:14px 0 0}
+.hero{background:var(--teal);color:#fff;border-radius:18px;padding:18px 18px 14px;margin:12px 0}
+.hero .top{display:flex;align-items:center;gap:14px}
+.hero .big{font-size:clamp(52px,16vw,68px);font-weight:800;line-height:.9;flex:none}
+.hero .lab{font-size:18px;font-weight:700;line-height:1.2}
+.hero .dt{display:grid;gap:3px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.28);font-size:15px}
+.hero .dt span{opacity:.92}.hero .dt b{opacity:1}
+.hero.w{background:#b4530f}.hero.u{background:var(--bad)}
+.avis{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--warn);border-radius:14px;padding:12px 14px;margin:12px 0}
+.avis b{display:block}.avis p{margin:4px 0 0;font-size:15px}
+.avis button{flex:none;border:0;background:none;color:var(--acc);font-weight:700;text-decoration:underline;min-height:40px;padding:0 2px}
+.alert{background:var(--bad-s);color:var(--bad);border-radius:14px;padding:10px 14px;font-weight:700;font-size:15px}
+.meter{display:grid;grid-template-columns:7.5em minmax(0,1fr) auto;gap:10px;align-items:center;margin:10px 0}
+.bar{height:14px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+@media (prefers-reduced-motion:no-preference){.bar i{animation:grow .7s ease}}
+@keyframes grow{from{width:0}}
+.meter b{font-size:17px;white-space:nowrap}
+.bar i.ok{background:var(--ok)}
+.next{display:flex;gap:12px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:12px 0;min-height:56px}
+.next:first-of-type{border-top:0}
+.next .cal{flex:none;width:48px;text-align:center;border-radius:10px;background:var(--acc-s);color:var(--acc);font-weight:800;line-height:1.1;padding:6px 0;font-size:20px}
+.next .cal small{display:block;font-size:11px;text-transform:uppercase}
+.next b{display:block}.next .sub{font-size:14px;color:var(--mut)}
+.cnt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.cnt button{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 6px;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.cnt b{font-size:24px;line-height:1}.cnt span{font-size:13px;color:var(--mut);text-align:center;line-height:1.2}
+.cnt .ok{border-color:var(--ok);background:var(--ok-s)}.cnt .ok b{color:var(--ok)}
+.steps{list-style:none;padding:0;margin:8px 0 0}
+.steps li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.dot{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:none;display:grid;place-items:center;font-size:14px;font-weight:700;padding:0;color:inherit}
+.dot.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+blockquote{margin:10px 0;padding:10px 12px;border-left:4px solid var(--acc);background:var(--bg);border-radius:0 10px 10px 0}
+details{margin:6px 0}summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+/* chercher */
+.dep{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 14px;min-height:52px;margin:10px 0}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0 6px}
+.seg button{min-height:54px;padding:4px;border-radius:12px;border:2px solid var(--line);background:var(--card);font-weight:700;font-size:14px;line-height:1.15}
+.seg button.on{border-color:var(--f);background:var(--fs);color:var(--f)}
+[hidden]{display:none!important}
+#fete{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(10,40,37,.55);animation:feteIn .3s ease}
+#fete canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#fete .boite{position:relative;max-width:360px;margin:16px;padding:28px 22px;border-radius:24px;background:var(--card,#fff);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:feteBoite .6s cubic-bezier(.2,1.6,.4,1)}
+#fete .gros{font-size:64px;line-height:1;margin-bottom:8px}
+#fete h2{font-size:28px;margin:0 0 8px}
+@keyframes feteIn{from{opacity:0}}@keyframes feteBoite{from{transform:scale(.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){#fete,#fete .boite{animation:none}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}
+.chips button{flex:none;min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:14px}
+.chips button.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tog{display:inline-grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:4px 0 10px}
+.tog button{border:0;background:var(--card);min-height:40px;padding:4px 18px;font-weight:700;font-size:14px}
+.tog button.on{background:var(--acc);color:#fff}
+.map{position:relative;isolation:isolate;z-index:0;height:330px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:light-dark(#e9efe4,#16251c)}
+.map .leaflet-container{width:100%;height:100%;font:inherit}
+.leaflet-popup-content{margin:10px 12px}
+.sug{display:flex;flex-direction:column;gap:4px;margin-top:6px}.sug button{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;min-height:44px}
+.load{color:var(--mut);font-size:14px;padding:8px 0}
+.full .err{color:var(--bad)}
+.ent{display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:10px 0}
+.ent:first-child{border-top:0}
+/* pistes */
+.prow{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--f);border-radius:14px;padding:12px 14px;margin:8px 0;min-height:64px}
+.prow .t{flex:1}.prow b{display:block;font-size:17px}.prow .sub{font-size:14px;color:var(--mut);display:block}
+.prow.off{opacity:.6}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5em,1fr));gap:6px}
+.res button{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-weight:700;font-size:15px}
+.res button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.opt{display:flex;gap:14px;align-items:center;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px;margin:8px 0;min-height:68px}
+.opt .ic{flex:none;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:24px;background:var(--acc-s)}
+.opt b{display:block;font-size:17px}.opt span.sub{font-size:14px;color:var(--mut)}
+.log{list-style:none;padding:0;margin:6px 0 0;font-size:15px}
+.log li{padding:8px 0;border-top:1px solid var(--line)}
+/* fenêtre du bas */
+.modal{position:fixed;inset:0;z-index:9;background:color-mix(in srgb,#000 45%,transparent);display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.modal>div{background:var(--bg);width:100%;max-width:480px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:10px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 10px}
+@media (prefers-reduced-motion:no-preference){.modal.on>div{animation:up .25s ease}}
+@keyframes up{from{transform:translateY(30px);opacity:.5}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:10;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-weight:700;max-width:90vw;display:none}
+.toast.on{display:flex;align-items:center;gap:14px}
+.toast span{white-space:nowrap}.toast button{border:0;background:none;color:#f6c344;font-weight:800;text-decoration:underline;min-height:40px;padding:0 4px;flex:none}
+/* connexion et premiers pas */
+body.out .hdr,body.out .app,body.out .nav{display:none}
+.full{display:none;max-width:480px;margin:0 auto;min-height:100%;padding:0 16px 32px;flex-direction:column}
+.full.on{display:flex}
+.onb{flex:1;display:flex;flex-direction:column;justify-content:center;padding-top:24px}
+.onb .big{font-size:56px;font-weight:800;line-height:1;color:var(--acc)}
+.onb h2{font-size:28px;margin:10px 0}.onb p{font-size:17px}
+.dots{display:flex;gap:6px;justify-content:center;margin:18px 0 8px}
+.dots span{width:8px;height:8px;border-radius:99px;background:var(--line)}.dots span.on{width:24px;background:var(--acc)}
+
+</style>
+</head>
+<body class="out">
+
+<section class="full on" id="login">
+  <div style="text-align:center;padding:56px 0 26px">
+    <div style="display:inline-flex;align-items:center;gap:14px">
+      <span style="position:relative;display:grid;place-items:center;width:60px;height:60px;border-radius:16px;background:var(--teal);color:#fff;font-weight:800;font-size:34px">P<i style="position:absolute;top:8px;right:8px;width:13px;height:13px;border-radius:50%;background:var(--or)"></i></span>
+      <span style="font-weight:800;font-size:42px;color:var(--teal)">Ma PFMP</span>
+    </div>
+    <div class="mut" style="font-size:19px;margin-top:10px">Je cherche mon stage</div>
+  </div>
+  <form id="loginForm" class="card" style="padding:22px">
+    <label for="lgId" style="margin-top:0">Identifiant</label><input id="lgId" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="prenom.nom">
+    <label for="lgCode">Code</label><input id="lgCode" type="password" autocomplete="current-password" autocapitalize="characters" placeholder="6 caractères">
+    <p class="mut small" style="margin:8px 0 0">Le code donné par ton professeur.</p>
+    <p class="small" id="lgErr" style="color:var(--bad);margin:8px 0 0" role="alert"></p>
+    <button type="submit" id="lgBtn" class="btn p w" style="margin-top:12px;min-height:56px;font-size:18px">Se connecter</button>
+  </form>
+  <p class="mut" style="text-align:center;margin:14px 0 0">Code perdu ? Demande-en un nouveau à ton professeur.</p>
+  <p class="small mut" style="text-align:center;margin-top:18px"><a class="link" href="prof.html">Espace professeur</a></p>
+</section>
+
+<section class="full" id="onb">
+  <div class="onb" id="onbBody"></div>
+  <div class="dots" id="onbDots"><span></span><span></span><span></span></div>
+  <div class="row" style="flex-wrap:nowrap"><button class="btn" id="onbSkip" style="flex:1">Passer</button><button class="btn p" id="onbNext" style="flex:2">Suivant</button></div>
+</section>
+
+<header class="hdr"><div class="in"><span class="lg"><span>P<i></i></span>Ma PFMP</span><button class="help" id="helpBtn" aria-label="Aide sur cet écran">?</button></div></header>
+
+<main class="app">
+  <section class="scr on" id="s-semaine"></section>
+  <section class="scr" id="s-chercher">
+    <h1 style="margin-top:14px">Chercher</h1>
+    <button class="dep" id="depBtn"></button>
+    <div class="seg" id="seg"></div>
+    <p class="small" id="champTxt" style="margin:4px 0 8px"></p>
+    <div class="chips" id="fams"></div>
+    <p class="small" id="famTxt" style="margin:0 0 8px"></p>
+    <div class="tog" id="tog"><button data-vue="carte" class="on">Carte</button><button data-vue="liste">Liste</button></div>
+    <div class="map" id="mapBox"><div id="carte" style="position:absolute;inset:0"></div></div>
+    <div class="card" id="liste" hidden></div>
+    <div id="sheet"></div>
+    <p class="small mut">Entreprises du registre officiel (data.gouv.fr), autour de ton point de départ. Le nom affiché est parfois le nom légal plutôt que l'enseigne : vérifie sur Google Maps.</p>
+  </section>
+  <section class="scr" id="s-pistes"></section>
+  <section class="scr" id="s-dossier"></section>
+</main>
+
+<nav class="nav" aria-label="Navigation"><div>
+  <button data-v="semaine" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Ma semaine</button>
+  <button data-v="chercher"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Chercher</button>
+  <button class="plus" id="plusBtn" aria-label="Noter ce qui s'est passé"><span>+</span>Noter</button>
+  <button data-v="pistes"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Mes pistes</button>
+  <button data-v="dossier"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Mon dossier</button>
+</div></nav>
+
+<div class="modal" id="modal"><div id="mBody"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script>
+{
+const $=s=>document.querySelector(s),DAY=864e5;
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+const D=s=>{if(!s)return null;const[y,m,d]=s.slice(0,10).split('-').map(Number);return new Date(y,m-1,d)};
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const j0=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x};
+const addD=(d,n)=>{const x=j0(d);x.setDate(x.getDate()+n);return x};
+const lundi=d=>{const x=j0(d);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const fc=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
+const fj=d=>d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+const pl=(n,s)=>n+' '+s+(n>1?'s':'');
+let today=j0(new Date()),vue='semaine',R=null,S=null,REF=null,P=null,DEP,FIN,OUV,BUT,NIV=0;
+const quand=d=>{const n=Math.round((j0(d)-today)/DAY);return n===0?"Aujourd'hui":n===1?'Demain':cap(fj(d))};
+const jours=()=>Math.round((DEP-today)/DAY),jb=()=>Math.round((BUT-today)/DAY);
+/* ---------- échanges avec le serveur ---------- */
+/* ---------- adresse du serveur ----------
+   La page peut être servie par le Pi lui-même (recherche-api.ma-pfmp.fr, ou l'adresse de secours en ts.net) : le serveur est alors à la même adresse.
+   Servie par GitHub Pages (comme LABORO), elle essaie l'adresse habituelle (Cloudflare) puis, si le réseau la bloque (lycée), l'adresse de secours (Tailscale), 4 s au plus chacune. */
+const SERVEURS=['https://recherche-api.ma-pfmp.fr/','https://laboro-pi.tail0da51c.ts.net/pfmp/'];
+const SUR_PI=location.hostname==='recherche-api.ma-pfmp.fr'||/\.ts\.net$/.test(location.hostname)||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+let BASE=SUR_PI?'':null,choixBase=null;
+async function joignable(b){const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);try{const r=await fetch(b+'api/referentiel',{signal:c.signal,cache:'no-store'});return r.ok}catch(e){return false}finally{clearTimeout(t)}}
+function trouverBase(force){
+  if(BASE!==null&&!force)return Promise.resolve(BASE);
+  if(choixBase&&!force)return choixBase;
+  choixBase=(async()=>{let s='';try{s=localStorage.getItem('pfmp-serveur')||''}catch(e){}
+    for(const b of [...new Set([s,...SERVEURS].filter(x=>SERVEURS.includes(x)))]){if(await joignable(b)){BASE=b;try{localStorage.setItem('pfmp-serveur',b)}catch(e){}return b}}
+    BASE=null;choixBase=null;throw new Error('Impossible de joindre le serveur. Vérifie ta connexion, puis réessaie.')})();
+  return choixBase}
+const urlApi=async u=>(await trouverBase())+'api'+u;
+let TOK='';try{TOK=localStorage.getItem('pfmp-eleve')||''}catch(e){}
+function setTok(t){TOK=t;try{t?localStorage.setItem('pfmp-eleve',t):localStorage.removeItem('pfmp-eleve')}catch(e){}}
+async function api(m,u,b,encore){
+  let r;try{r=await fetch(await urlApi(u),{method:m,headers:{'Content-Type':'application/json',...(TOK?{Authorization:'Bearer '+TOK}:{})},body:b?JSON.stringify(b):undefined})}
+  catch(e){/* réseau changé en cours de route : on recherche le serveur et on relance une lecture, jamais un enregistrement (pour ne pas l'enregistrer deux fois) */
+    if(!SUR_PI&&m==='GET'&&!encore&&await trouverBase(true).then(()=>true,()=>false))return api(m,u,b,true);
+    throw new Error(e&&/joindre le serveur/.test(e.message)?e.message:'Pas de connexion internet. Réessaie dans un instant.')}
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&TOK&&!u.startsWith('/connexion')){setTok('');sortir();throw new Error(d.erreur||'Reconnecte-toi.')}
+  if(!r.ok)throw new Error(d.erreur||'Erreur '+r.status);
+  return d;
+}
+let occupe=false;
+async function agir(m,u,b,ok){if(occupe)return null;occupe=true;try{const d=await api(m,u,b);if(d&&d.eleve)charger(d);if(ok)toast(ok);return d}catch(e){toast(e.message);return null}finally{occupe=false}}
+/* ---------- textes selon la classe ---------- */
+const CH={C:{n:'Accueil',c:'var(--fC)',s:'var(--fCs)'},A:{n:'Espace commercial (A)',c:'var(--fA)',s:'var(--fAs)'},B:{n:'Prospection (B)',c:'var(--fB)',s:'var(--fBs)'},'?':{n:'À valider',c:'var(--mut)',s:'var(--line)'}};
+const chip=f=>`<span class="chip" style="--f:${(CH[f]||CH['?']).c};--fs:${(CH[f]||CH['?']).s}">${(CH[f]||CH['?']).n}</span>`;
+const NIVTXT=()=>['seconde','première','terminale'][R.classe.niveau]||'seconde';
+const BAC=()=>R.classe.niveau?'Bac Pro Métiers du commerce et de la vente':'Bac Pro Métiers de la relation client';
+const DECOUV=()=>R.classe.niveau?(R.classe.option==='B'?'la prospection et la vente, au contact des clients':"l'animation et la gestion d'un espace commercial, au contact des clients"):"les métiers de l'accueil, du commerce et de la vente, au contact des clients";
+const PARTAGE=()=>!!navigator.share&&matchMedia('(pointer:coarse)').matches;
+const ENV=()=>PARTAGE()?'Envoyer le message':'Copier le message';
+const PER=()=>`du ${fj(DEP)} au ${fj(FIN)}`;
+const MSG=()=>`Bonjour, je cherche un stage ${PER()} pour mon ${BAC()}. Je dois découvrir ${DECOUV()}. Est-ce que tu connais un endroit qui pourrait m'accueillir (magasin, entreprise, mairie, association…) ? Merci beaucoup !`;
+const RT=['Démarrage','Recherche','Dernière ligne droite','Date limite dépassée','Le stage a commencé'];
+const ryt=()=>{const t=today,k=t>=DEP?4:t>=BUT?3:t>=addD(BUT,-28)?2:t<addD(OUV,14)?0:1,n=Math.min(k,2)+1+NIV;
+  return{k,n,need:['','c','v','v','v'][k],t:RT[k],x:`${pl(n,'démarche')} par semaine${k===1?', dont au moins 1 contact avec une entreprise':k>=2?', dont au moins 1 visite sur place, CV en main':''}.${k===0?' Prépare-toi : ton CV, ton entourage, tes premières pistes.':''}`}};
+const RETARD=k=>k===3?"La date limite pour déposer ta convention est passée. Ce n'est pas fini : tu peux encore trouver, mais chaque jour compte.":k===4?"Ta PFMP a commencé. Tu peux encore trouver une entreprise et commencer en cours de route : continue chaque jour.":'';
+const OBJ=()=>({pistes:NIV?10:8,cours:5,ent:5});
+const TRANSP=[['pied','À pied',2],['velo','À vélo',5],['bus','En bus',10],['rer','En RER',20],['voiture','En voiture (avec un proche)',15]];
+const STA={nv:['À contacter','nv'],inj:['Injoignable','wa'],rap:['À rappeler','wa'],rdv:['Rendez-vous','ok'],ref:['Refus','no'],acc:['Accord','ok']};
+const RES=[['inj','Injoignable'],['rap','À rappeler'],['rdv','Rendez-vous'],['ref','Refus'],['acc','Accord']];
+const CONV=()=>["Mes missions correspondent à ma formation","Mes horaires respectent la loi (35 h par semaine, 8 h par jour"+(R.eleve.mineur?", 2 jours de repos consécutifs":"")+")","Le nom et le téléphone de mon tuteur sont indiqués","La partie assurance de l'entreprise est complétée : assureur et numéro de contrat","L'entreprise a mis son cachet et sa signature",...(R.eleve.mineur?["Mes responsables légaux ont signé"]:[])];
+const HORAIRES=`<ul style="padding-left:18px;margin:6px 0"><li><b>35 heures par semaine au maximum, et 8 heures par jour au maximum.</b></li><li><b>Si tu as moins de 18 ans : 2 jours de repos consécutifs par semaine, dimanche compris</b> (sauf dérogation prévue par la loi).</li><li>Si tu as moins de 18 ans : une pause de 30 minutes après 4 h 30 de travail, 12 heures de repos entre deux journées, pas de travail de nuit.</li></ul><p class="small">Si l'entreprise te demande plus, parles-en à ton professeur avant de signer.</p>`;
+/* ---------- état local ---------- */
+function charger(d){
+  R=d;today=D(d.aujourdhui)||j0(new Date());P=d.periode;NIV=d.classe&&d.classe.niveau>0?1:0;
+  if(!P){S=null;return}
+  DEP=D(P.debut);FIN=D(P.fin);OUV=D(P.ouverture);BUT=D(P.butoir);
+  const cib=d.pistes.map(p=>({id:p.id,n:p.nom,f:p.champ,fam:p.famille,ville:p.ville,adresse:p.adresse,lat:p.lat,lon:p.lon,siret:p.siret,st:p.statut,arch:p.archive,val:p.validation,ajout:D(p.date),
+    d:p.contacts.map(c=>({id:c.id,d:D(c.date),t:c.type,r:c.resultat,x:c.texte})),next:p.prochaine?{d:D(p.prochaine.date),h:p.prochaine.heure,t:p.prochaine.txt}:null}));
+  const s=d.suivi,pa=s.piste_id?cib.find(c=>c.id===s.piste_id):null;
+  S={ent:d.entourage.map(x=>({id:x.id,l:x.lien,r:x.reponse,d:D(x.date)})),cib,log:d.journal.map(j=>({id:j.id,d:D(j.date),t:j.type})),
+    accord:s.statut!=='rech'?{n:pa?pa.n:'Mon entreprise',depose:s.statut==='sign',check:s.controle||[],tut:s.tuteur||''}:null,refus:s.statut==='rech'?s.refus:null};
+}
+const actives=()=>S.cib.filter(c=>!c.arch),enCours=()=>S.cib.filter(c=>!c.arch&&!['ref','acc'].includes(c.st)).length;
+const CT=['Visite','Appel','Mail'];
+const auj=x=>x.d&&+j0(x.d)===+j0(today);
+const contacts=()=>S.cib.flatMap(c=>c.d).filter(x=>CT.includes(x.t));
+const demarches=()=>{const vu=new Set(),aj=S.cib.filter(c=>{const k=+c.ajout;if(vu.has(k))return false;vu.add(k);return true}).map(c=>({d:c.ajout,t:'piste'}));
+  return[...contacts().map(x=>({d:x.d,t:x.t})),...S.ent.map(x=>({d:x.d,t:'ent'})),...S.log,...aj]};
+const week=()=>{const L=lundi(today),d=demarches().filter(x=>x.d>=L&&x.d<=today);return{n:d.length,c:d.filter(x=>CT.includes(x.t)).length,v:d.filter(x=>x.t==='Visite').length}};
+const silence=()=>{const d=demarches().map(x=>+j0(x.d));return d.length?Math.round((today-Math.max(...d))/DAY):null};
+const byId=id=>S.cib.find(c=>c.id===+id);
+/* ---------- outils ---------- */
+function toastAnnuler(t,fn){const e=$('#toast');e.innerHTML=`<span>${esc(t)}</span><button type="button">Annuler</button>`;e.querySelector('button').onclick=()=>{e.classList.remove('on');fn()};e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),7000)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),3400)}
+/* typographie française : espace insécable avant « ? ! : ; » pour qu'ils ne commencent jamais une ligne */
+function insec(root){if(!root)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){const v=n.nodeValue;if(/ [?!:;»]/.test(v)||/« /.test(v))n.nodeValue=v.replace(/ ([?!:;»])/g,'\u00a0$1').replace(/« /g,'«\u00a0')}}
+function modal(h){$('#mBody').innerHTML='<div class="grab"></div>'+h+'<button class="btn w" data-close style="margin-top:14px">Fermer</button>';insec($('#mBody'));$('#modal').classList.add('on');$('#mBody').scrollTop=0}
+const close=()=>$('#modal').classList.remove('on');
+function copy(t,b){const ok=()=>{b.textContent='Copié ✓'};try{navigator.clipboard.writeText(t).then(ok,()=>{b.textContent='Sélectionne le texte pour le copier'})}catch(e){b.textContent='Sélectionne le texte pour le copier'}}
+function go(v){if(!S&&v!=='semaine'&&v!=='dossier')v='semaine';vue=v;document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));document.querySelectorAll('.nav [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));window.scrollTo(0,0);render()}
+function render(){if(!R)return;({semaine,chercher,pistes,dossier})[vue]();insec($('#s-'+vue));
+  if(S&&S.accord&&S.accord.depose){const cle='fete-stage-'+P.id;let vu=false;try{vu=localStorage.getItem(cle)}catch(e){}
+    if(!vu){try{localStorage.setItem(cle,'1')}catch(e){}fete('🎉','Ton stage est trouvé !',`Ta convention avec <b>${esc(S.accord.n)}</b> est acceptée par le lycée. Félicitations, c'est une vraie réussite !`,'Merci !')}}}
+/* ---------- ma semaine ---------- */
+/* bandeau du haut : vert-bleu par défaut, orange dans la dernière ligne droite, rouge la dernière semaine et après la date limite */
+const cleRefus=()=>S&&S.refus?'pfmp-refus-vu:'+(R&&R.eleve?R.eleve.identifiant:'')+':'+S.refus.date+':'+(S.refus.nom||''):'';
+/* ---------- CV et lettre importés ---------- */
+const DOCN={cv:['mon CV','Mon CV'],lettre:['ma lettre','Ma lettre']};let DOC_T='';
+function docsHtml(){const L=(R&&R.documents)||[];return Object.keys(DOCN).map(k=>{const d=L.find(x=>x.type===k);
+  return d?`<div class="ent"><div style="flex:1"><b>📄 ${DOCN[k][1]}</b><span class="small mut d">${esc(d.nom)} · importé le ${fc(D(d.date))}</span></div><button class="btn" data-docvoir="${k}" style="min-height:44px">Voir</button><button class="link small" data-docdel="${k}">Retirer</button></div>`
+  :`<button class="btn w" data-docimp="${k}" style="margin-top:6px">Importer ${DOCN[k][0]}</button>`}).join('')+`<input type="file" id="docFile" accept="application/pdf,image/*" hidden>`}
+function imgJpeg(f){return new Promise((ok,ko)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);const k=Math.min(1,1800/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  const essai=q=>c.toBlob(b=>{if(!b)return ko(new Error('Photo illisible.'));if(b.size>2.3e6&&q>.5)return essai(q-.15);ok(b)},'image/jpeg',q);essai(.85)};im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('Cette photo ne peut pas être lue. Essaie en PDF ou avec une autre photo.'))};im.src=u})}
+async function docEnvoyer(f){if(!f||!DOC_T)return;let corps=f,nom=f.name||'';
+  try{if(/^image\//.test(f.type)||/\.(heic|heif|jpe?g|png|webp)$/i.test(nom)){corps=await imgJpeg(f);nom=nom.replace(/\.[^.]+$/,'')+'.jpg'}
+    else if(!/pdf/i.test(f.type)&&!/\.pdf$/i.test(nom))throw new Error('Choisis un fichier PDF ou une photo.');
+    if(corps.size>2.4e6)throw new Error('Fichier trop lourd (2,4 Mo au maximum). Enregistre-le en PDF plus léger, ou prends une photo.');
+    toast('Envoi en cours…');
+    const r=await fetch(await urlApi('/moi/documents/'+DOC_T),{method:'PUT',headers:{'Content-Type':corps.type||'application/octet-stream','X-Nom':encodeURIComponent(nom),...(TOK?{Authorization:'Bearer '+TOK}:{})},body:corps});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.erreur||'Envoi impossible.');charger(d);render();toast(`${cap(DOCN[DOC_T][0])} est enregistré${DOC_T==='lettre'?'e':''} ✓`)}
+  catch(e){toast(e.message)}}
+async function docVoir(k){const w=window.open('','_blank');try{const r=await fetch(await urlApi('/moi/documents/'+k),{headers:TOK?{Authorization:'Bearer '+TOK}:{}});if(!r.ok)throw new Error('Document introuvable.');const u=URL.createObjectURL(await r.blob());if(w)w.location=u;else location.href=u}catch(e){if(w)w.close();toast(e.message)}}
+async function retirerCv(id){if(await agir('DELETE','/moi/journal'+(id?'/'+id:''),null,'Démarche retirée.'))render()}
+function refusVu(){try{return localStorage.getItem(cleRefus())==='1'}catch(e){return false}}
+function hero(){const t=today,k=ryt().k,an=d=>d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const ton=S.accord?'':k>=3||(k===2&&jb()<=7)?'u':k===2?'w':'';
+  const Ps=`<span>Stage du ${DEP.toLocaleDateString('fr-FR',{day:'numeric',month:'long',...(DEP.getFullYear()!==FIN.getFullYear()?{year:'numeric'}:{})})} au ${FIN.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</span>`;
+  const Dl=`<span>Date limite pour la convention : <b style="white-space:nowrap">${an(BUT)}</b></span>`;
+  const [big,lab,dt]=t<BUT&&!(S.accord&&S.accord.depose)?[jb(),jb()>1?'jours pour déposer ta convention':'jour pour déposer ta convention',Dl+Ps]
+    :t<DEP?[jours(),jours()>1?'jours avant ton stage':'jour avant ton stage',Ps+(t>=BUT&&!S.accord?Dl:'')]
+    :t<=FIN?['J+'+(Math.round((t-DEP)/DAY)+1),'depuis le début du stage',Ps]:['✓','PFMP terminée',Ps];
+  return `<div class="hero ${ton}"><div class="top"><div class="big">${big}</div><div class="lab">${lab}</div></div><div class="dt">${dt}</div></div>`}
+function compteurs(){const O=OBJ(),c=[['pistes',actives().length,O.pistes,'pistes dans ma liste'],['pistes',enCours(),O.cours,'pistes en cours'],['dossier',S.ent.length,O.ent,'personnes de mon entourage']];
+  return `<div class="cnt">${c.map(([v,n,m,t])=>`<button data-go="${v}" class="${n>=m?'ok':''}"><b>${n>=m?'✓ ':''}${Math.min(n,m)}/${m}</b><span>${t}</span></button>`).join('')}</div>`}
+const meter=(t,n,m)=>`<div class="meter"><span>${t}</span><div class="bar"><i class="${n>=m?'ok':''}" style="width:${Math.min(100,n/m*100)}%"></i></div><b>${n}/${m}</b></div>`;
+function maSemaine(Rr){
+  const w=week(),okX=Rr.need==='c'?w.c>=1:Rr.need==='v'?w.v>=1:true,reste=Math.max(Rr.n-w.n,okX?0:1);
+  const msg=!reste?'Bravo, ta semaine est réussie !':`Encore ${pl(reste,'démarche')}${okX?'':Rr.need==='c'?', dont 1 contact avec une entreprise':', dont 1 visite sur place'} pour réussir ta semaine.`;
+  return `<div class="card"><div class="row between"><h2>${Rr.t}</h2><span class="small mut">depuis lundi ${fc(lundi(today))}</span></div>
+  <p style="margin:4px 0 2px">${Rr.x}</p>
+  ${meter('Démarches',w.n,Rr.n)}${Rr.need==='c'?meter('Contact entreprise',w.c,1):Rr.need==='v'?meter('Visite sur place',w.v,1):''}
+  <p style="margin:4px 0 4px;font-weight:700">${msg}</p>
+  <details><summary>Qu'est-ce qui compte comme une démarche ?</summary><ul class="small" style="padding-left:18px;margin:0 0 6px"><li>Parler de ton stage à quelqu'un de ton entourage</li><li>Ajouter des pistes depuis la carte (une fois par jour)</li><li>Préparer, mettre à jour ou imprimer ton CV ou ta lettre</li><li>Appeler, visiter ou écrire à une entreprise, ou la relancer</li></ul><p class="small mut" style="margin:0">Plus le stage approche, plus les contacts et les visites sur place comptent : c'est le plus efficace.</p></details>
+  <button class="btn p w" data-plus="menu" style="margin-top:6px">Noter une démarche</button></div>`;
+}
+function semaine(){
+  const el=$('#s-semaine');
+  if(!S){el.innerHTML=`<h1 class="hello">Bonjour ${esc(R.eleve.prenom)} 👋</h1><div class="card"><h2>Pas encore de PFMP programmée</h2><p style="margin:6px 0 0">Ton professeur n'a pas encore ouvert la recherche de stage pour ta classe. En attendant, tu peux préparer ton CV dans « Mon dossier ».</p></div>`;return}
+  const A=S.accord,Rr=ryt(),nc=contacts().length,plan=!A&&!nc&&Rr.k>=2,ret=!A&&RETARD(Rr.k)?`<p class="alert">${RETARD(Rr.k)}</p>`:'';
+  let h=`<h1 class="hello">Bonjour ${esc(R.eleve.prenom)} 👋</h1>`;
+  if(S.refus&&S.refus.date&&today-D(S.refus.date)<15*DAY&&!refusVu())h+=`<div class="avis"><div style="flex:1"><b>${S.refus.annule?`Ton stage chez ${esc(S.refus.nom||'cette entreprise')} est annulé.`:`Ton professeur n'a pas retenu ${esc(S.refus.nom||'ce stage')}.`}</b><p>${esc(S.refus.message||'')}</p></div><button data-refusvu>J'ai compris</button></div>`;
+  if(A){
+    const L=CONV(),ck=L.every((_,i)=>A.check[i]),e=[["Une entreprise accepte de t'accueillir",true],["L'entreprise remplit et signe ta convention",ck||A.depose],["Tu déposes ta convention complète au lycée",A.depose]];
+    h+=hero()+`<div class="card"><span class="st ${A.depose?'ok':'wa'}">${A.depose?'Stage trouvé':'Convention à déposer'}</span><h2 style="margin-top:8px">${esc(A.n)}</h2>
+    <p style="margin:6px 0 0">${A.depose?'Ton stage est trouvé. Prépare ton premier jour !':`Ton professeur est prévenu. Fais remplir ta convention par l'entreprise, vérifie qu'elle est complète, puis dépose-la au lycée${today<BUT?`, si possible avant le ${fj(BUT)}`:' dès que possible'}. Ton stage est trouvé dès que le lycée l'accepte.`}</p>
+    <ul class="steps">${e.map(([t,ok])=>`<li><span class="dot ${ok?'ok':''}">${ok?'✓':''}</span><span>${t}</span></li>`).join('')}</ul></div>
+    ${A.depose?'':`<div class="card"><h2>Ma convention est-elle complète ?</h2><p class="small mut" style="margin:4px 0 0">Coche au fur et à mesure. Si elle n'est pas complète, le lycée te la rend : tu la fais compléter et tu la redéposes.</p><ul class="steps">${L.map((t,i)=>`<li><button class="dot ${A.check[i]?'ok':''}" data-conv="${i}" aria-pressed="${!!A.check[i]}" aria-label="${esc(t)}">${A.check[i]?'✓':''}</button><span>${esc(t)}</span></li>`).join('')}</ul>
+    <details><summary>Mes horaires : ce que dit la loi</summary>${HORAIRES}</details></div>
+    <div class="card"><h2>Mon tuteur</h2><p class="small mut" style="margin:4px 0 0">${A.tut?esc(A.tut):'Pas encore indiqué.'}</p><button class="btn w" data-tuteur style="margin-top:8px">${A.tut?'Modifier':'Indiquer mon tuteur'}</button></div>
+    <p class="small mut">Tu n'as plus de démarches à faire, sauf si ton professeur te signale un problème avec cette entreprise.</p>`}
+    <p style="text-align:center;margin:0"><button class="link small" data-annacc>${A.depose?'Mon stage ne se fait plus':'Je me suis trompé, ou ce stage ne se fait plus'}</button></p>`;
+  }else if(plan){
+    const vis=contacts().filter(x=>x.t==='Visite').length,np=actives().length;
+    const P3=[["Parle de ton stage à 3 personnes de ton entourage",S.ent.length>=3,`${Math.min(S.ent.length,3)}/3`,`<blockquote class="small" style="margin:6px 0">${esc(MSG())}</blockquote><div class="row" style="flex-wrap:nowrap"><button class="btn" data-copy style="flex:1">${ENV()}</button><button class="btn p" data-ent style="flex:1">J'en ai parlé</button></div>`],
+    ["Ajoute 5 pistes près de chez toi",np>=5,`${Math.min(np,5)}/5`,`<button class="btn w" data-go="chercher" style="margin-top:6px">Chercher sur la carte</button>`],
+    ["Va dans 1 entreprise, sur place, avec ton CV",vis>=1,`${Math.min(vis,1)}/1`,`<div class="row" style="flex-wrap:nowrap;margin-top:6px"><a class="btn" href="cv.html" target="_blank" rel="noopener" style="flex:1">Mon CV</a><button class="btn p" data-plus="contact" style="flex:1">C'est fait</button></div>`]];
+    h+=hero()+ret+`<div class="card"><p class="small mut" style="margin:0;font-weight:700">TON PLAN DE DÉPART</p><h2 style="margin:4px 0 6px">${Rr.k===2?`Il reste ${pl(jb(),'jour')} avant la date limite : c'est court, mais c'est jouable`:"La date limite est passée, mais ce n'est pas fini"}</h2>
+    <p style="margin:0 0 4px">${Rr.k===2?'Chaque année, des élèves trouvent leur stage dans ce délai.':'Chaque année, des élèves trouvent même après le début de la PFMP.'} Fais ces 3 choses cette semaine, dans l'ordre.</p>
+    <ul class="steps">${P3.map(([t,ok,c,b],i)=>`<li><span class="dot ${ok?'ok':''}">${ok?'✓':i+1}</span><div style="flex:1"><div class="row between" style="flex-wrap:nowrap;align-items:flex-start"><b>${t}</b><span class="small mut" style="flex:none">${c}</span></div>${ok?'':b}</div></li>`).join('')}</ul></div>
+    <div class="card"><h2>Et ensuite ?</h2><p style="margin:6px 0 0">Chaque semaine, jusqu'à ce que tu trouves : ${Rr.x.charAt(0).toLowerCase()+Rr.x.slice(1)} Ton professeur suit ton avancée et peut t'aider.</p></div>`;
+  }else{
+    const sil=silence();
+    h+=hero()+ret+(sil!==null&&sil>=7?`<p class="alert">Ça fait ${sil} jours que tu n'as rien noté. Une seule démarche aujourd'hui, et tu repars !</p>`:'')+maSemaine(Rr);
+    if(!nc&&S.ent.length<5){
+      h+=`<div class="card"><p class="small mut" style="margin:0;font-weight:700">POUR BIEN COMMENCER</p><h2 style="margin:4px 0 6px">Parle de ton stage à 5 personnes de ton entourage</h2>
+      ${meter('Entourage',S.ent.length,5)}
+      <p class="small" style="margin:0">Beaucoup de stages se trouvent grâce à quelqu'un qu'on connaît : famille, amis, voisins.</p>
+      <p class="small" style="margin:10px 0 0;font-weight:700">Le message à envoyer</p><blockquote class="small" style="margin:6px 0 10px">${esc(MSG())}</blockquote>
+      <div class="row" style="flex-wrap:nowrap"><button class="btn" data-copy style="flex:1">${ENV()}</button><button class="btn p" data-ent style="flex:1">J'en ai parlé à quelqu'un</button></div></div>
+      <div class="card"><h2>Et ensuite ?</h2><p style="margin:6px 0 10px">${Rr.k===0?"Repère des pistes sur la carte et prépare ton CV. Les contacts avec les entreprises commencent juste après : ne laisse pas filer le temps.":"Contacte des entreprises : commence par repérer des pistes près de chez toi."}</p><button class="btn w" data-go="chercher">Repérer des pistes sur la carte</button></div>`;
+    }else{
+      const fut=S.cib.filter(c=>!c.arch&&c.next&&c.next.d>=today).sort((a,b)=>a.next.d-b.next.d).slice(0,2);
+      let nx=fut.map(c=>`<button class="next" data-piste="${c.id}"><span class="cal">${c.next.d.getDate()}<small>${c.next.d.toLocaleDateString('fr-FR',{month:'short'})}</small></span><span><b>${quand(c.next.d)}${c.next.h?' à '+esc(c.next.h):''}</b>${esc(c.next.t)}<span class="sub d">${esc(c.n)}</span></span></button>`).join('');
+      if(!nx){const r=S.cib.find(c=>!c.arch&&c.val!=='attente'&&['rap','inj'].includes(c.st))||S.cib.find(c=>!c.arch&&c.val!=='attente'&&c.st==='nv');
+        nx=r?`<button class="next" data-piste="${r.id}"><span class="cal">!</span><span><b>${r.st==='nv'?'Contacte':'Relance'} ${esc(r.n)}</b><span class="sub d">${STA[r.st][0]}</span></span></button>`:`<p>Ajoute de nouvelles pistes depuis la carte.</p><button class="btn w" data-go="chercher">Chercher des pistes</button>`}
+      h+=`<div class="card"><h2>Ma prochaine action</h2>${nx}</div>`;
+    }
+  }
+  if(!A&&!plan)h+=compteurs();
+  el.innerHTML=h;
+}
+/* ---------- chercher ---------- */
+let champ='',fam='',vueCh='carte',sel=null,ENTS=[],INC=false,MAP=null,COUCHE=null,chargeCle='',chargement=false;
+const champsOK=()=>(P?P.champs:'CAB').split('');
+const fams=()=>REF.familles.filter(f=>f.champ===champ);
+const deja=e=>S.cib.some(c=>!c.arch&&((e.siret&&c.siret===e.siret)||c.n===e.nom));
+const gmaps=(q,a)=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+' '+(a||''))}`;
+function chercher(){
+  if(!champsOK().includes(champ))champ=champsOK()[0];
+  const e=R.eleve;
+  $('#depBtn').innerHTML=`<span><span class="small mut d">Je pars de</span><b>${esc(e.ville||'Ville à choisir')}</b> · ${(e.transports||[]).map(k=>(t=>t.charAt(0).toLowerCase()+t.slice(1))((TRANSP.find(x=>x[0]===k)||['',''])[1])).filter(Boolean).join(', ')||'transport à choisir'} · ${e.rayon} km</span><span class="link" style="min-height:0;padding:0">Modifier</span>`;
+  const C=champsOK();
+  $('#seg').hidden=C.length<2;$('#seg').style.gridTemplateColumns=`repeat(${C.length},minmax(0,1fr))`;
+  $('#seg').innerHTML=C.map(f=>`<button data-f="${f}" class="${champ===f?'on':''}" style="--f:${CH[f].c};--fs:${CH[f].s}">${CH[f].n}</button>`).join('');
+  $('#champTxt').textContent=REF.champs[champ].texte;
+  $('#fams').innerHTML=`<button data-fam="" class="${fam?'':'on'}">Tout</button>`+fams().map(f=>`<button data-fam="${f.id}" class="${fam===f.id?'on':''}">${esc(f.nom)}</button>`).join('');
+  const F=REF.familles.find(x=>x.id===fam);$('#famTxt').innerHTML=F?`${esc(F.texte)} <span class="mut">Par exemple : ${esc(F.exemples)}.</span>`:'';
+  document.querySelectorAll('#tog button').forEach(b=>b.classList.toggle('on',b.dataset.vue===vueCh));
+  $('#mapBox').hidden=vueCh!=='carte';$('#liste').hidden=vueCh!=='liste';
+  if(e.lat==null){$('#mapBox').hidden=true;$('#liste').hidden=true;$('#tog').hidden=true;$('#sheet').innerHTML=`<div class="card"><p style="margin:0 0 10px">Pour voir les entreprises autour de toi, indique d'abord d'où tu pars le matin.</p><button class="btn p w" data-dep>Choisir mon point de départ</button></div>`;return}
+  $('#tog').hidden=false;
+  if(F&&!F.carte){$('#mapBox').hidden=true;$('#liste').hidden=true;$('#sheet').innerHTML=`<div class="card"><p class="small" style="margin:0 0 10px">Ces entreprises ne se repèrent pas bien dans le registre officiel. Cherche-les par leur nom sur Google Maps.</p><a class="btn w" href="${gmaps(F.exemples.split(',')[0],e.ville)}" target="_blank" rel="noopener">Chercher « ${esc(F.exemples.split(',')[0])} » sur Google Maps</a></div>`;return}
+  const cle=[champ,fam,e.lat,e.lon,e.rayon].join('|');
+  if(cle!==chargeCle){chargeCle=cle;ENTS=[];sel=null;chargement=true;dessiner();
+    api('GET','/moi/carte?'+(fam?'famille='+fam:'champ='+champ)).then(d=>{if(chargeCle!==cle)return;chargement=false;ENTS=d.entreprises;INC=!!d.incomplet;dessiner()}).catch(err=>{if(chargeCle!==cle)return;chargement=false;chargeCle='';$('#liste').hidden=true;$('#sheet').innerHTML=`<div class="card"><p class="small" style="margin:0 0 10px">${esc(err.message)}</p>${vide()}</div>`})}
+  else dessiner();
+}
+function vide(){const F=REF.familles.find(x=>x.id===fam),q=F?F.exemples.split(',')[0]:REF.champs[champ].nom;return `<p class="small">Pas d'entreprise trouvée ici avec ces choix. Élargis la distance, ou cherche sur Google Maps.</p><a class="btn w" href="${gmaps(q,R.eleve.ville)}" target="_blank" rel="noopener">Chercher « ${esc(q)} » sur Google Maps</a>`}
+function dessiner(){if(vueCh==='carte')carte();else liste()}
+function carte(){
+  const e=R.eleve;if(typeof L==='undefined'){$('#sheet').innerHTML='<p class="small">La carte ne se charge pas. Utilise la vue Liste.</p>';return}
+  if(!MAP){MAP=L.map('carte',{zoomControl:true,attributionControl:true}).setView([e.lat,e.lon],12);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(MAP);COUCHE=L.layerGroup().addTo(MAP)}
+  setTimeout(()=>MAP.invalidateSize(),50);
+  COUCHE.clearLayers();
+  const cercle=L.circle([e.lat,e.lon],{radius:e.rayon*1000,color:'#115e57',weight:2,dashArray:'6 5',fillOpacity:.06}).addTo(COUCHE);
+  L.circleMarker([e.lat,e.lon],{radius:7,color:'#fff',weight:3,fillColor:'#17252b',fillOpacity:1}).addTo(COUCHE).bindTooltip('Mon point de départ');
+  const col={C:'#c2560c',A:'#2563a8',B:'#6d3fb3'};
+  ENTS.forEach((x,i)=>{L.circleMarker([x.lat,x.lon],{radius:9,color:'#fff',weight:2,fillColor:deja(x)?'#15803d':col[x.champ],fillOpacity:1}).addTo(COUCHE).on('click',()=>{sel=i;$('#sheet').innerHTML=fiche(x)})});
+  if(MAP._pfmpCle!==chargeCle){MAP.fitBounds(cercle.getBounds(),{padding:[10,10]});MAP._pfmpCle=chargeCle}
+  const x=ENTS[sel];
+  if(chargement){$('#sheet').innerHTML='<p class="load">Recherche des entreprises autour de toi…<br><span class="small mut">La première fois, cela peut prendre jusqu’à une minute.</span></p>';return}
+  $('#sheet').innerHTML=x?fiche(x):ENTS.length?`<p class="small mut">${pl(ENTS.length,'entreprise')} à moins de ${e.rayon} km. Touche un repère pour la voir.${INC?' Certains types d\'entreprises n\'ont pas pu être chargés : réessaie dans un moment.':''}</p>`:vide();
+}
+function fiche(x){const d=deja(x),F=REF.familles.find(f=>f.id===x.famille);return `<div class="card">${chip(x.champ)}<h3 style="margin-top:8px">${esc(x.nom)}</h3><p class="small mut" style="margin:4px 0 10px">${F?esc(F.nom)+' · ':''}${esc(x.adresse||x.ville)} · ${String(x.dist).replace('.',',')} km${x.legal&&x.legal!==x.nom?' · '+esc(x.legal):''}</p>
+  <button class="btn ${d?'':'p'} w" data-add="${ENTS.indexOf(x)}" ${d?'disabled':''}>${d?'✓ Déjà dans mes pistes':'Ajouter à mes pistes'}</button>
+  <a class="btn w" style="margin-top:8px" href="${gmaps(x.nom,x.adresse||x.ville)}" target="_blank" rel="noopener">Voir sur Google Maps</a></div>`}
+function liste(){
+  if(chargement||!ENTS.length){$('#liste').hidden=true;$('#sheet').innerHTML=chargement?'<p class="load">Recherche des entreprises autour de toi…<br><span class="small mut">La première fois, cela peut prendre jusqu’à une minute.</span></p>':vide();return}
+  $('#sheet').innerHTML='';$('#liste').hidden=false;
+  $('#liste').innerHTML=ENTS.slice(0,150).map((x,i)=>`<div class="ent"><div><b>${esc(x.nom)}</b><span class="small mut d">${esc(x.adresse||x.ville)} · ${String(x.dist).replace('.',',')} km</span></div>${deja(x)?'<span class="st ok">✓ Ajoutée</span>':`<button class="btn" data-add="${i}" style="min-height:44px">Ajouter</button>`}</div>`).join('')+(ENTS.length>150?`<p class="small mut">Les 150 plus proches. Choisis une famille ou réduis la distance pour affiner.</p>`:'')}
+function choixVille(prefix,cb){
+  const inp=$('#'+prefix+'Q'),box=$('#'+prefix+'S');let h;
+  inp.addEventListener('input',()=>{clearTimeout(h);const q=inp.value.trim();if(q.length<2){box.innerHTML='';return}
+    h=setTimeout(()=>api('GET','/communes?q='+encodeURIComponent(q)).then(L=>{box.innerHTML=L.map((c,i)=>`<button type="button" data-i="${i}">${esc(c.nom)} <span class="mut small">${esc(c.cp)}</span></button>`).join('')||'<p class="small mut">Aucune ville trouvée.</p>';box.onclick=e=>{const b=e.target.closest('[data-i]');if(!b)return;const c=L[+b.dataset.i];inp.value=c.nom;box.innerHTML='';cb(c)}}).catch(err=>{box.innerHTML=`<p class="small">${esc(err.message)}</p>`}),300)});
+}
+function depart(){
+  const e=R.eleve;let choix=e.lat!=null?{nom:e.ville,lat:e.lat,lon:e.lon}:null,tr=[...(e.transports||[])];
+  modal(`<h2>Mon point de départ</h2><label for="dQ">Je pars de</label><input id="dQ" value="${esc(e.ville||'')}" placeholder="Ta ville" autocomplete="off"><div class="sug" id="dS"></div>
+  <p class="small mut" style="margin:6px 0 0">La ville d'où tu partiras chaque matin : en général, chez toi.</p>
+  <label>Comment je peux aller à mon stage</label><p class="small mut" style="margin:6px 0 0">Choisis tout ce qui est possible, pas seulement ce que tu fais pour venir au lycée : pour un stage, prendre le bus ou le RER, c'est normal.</p><div class="res" id="dT">${TRANSP.map(t=>`<button data-t="${t[0]}" class="${tr.includes(t[0])?'on':''}">${t[1]}</button>`).join('')}</div>
+  <label for="dR">Jusqu'où peux-tu aller ? <b id="dRV" style="color:var(--teal)">${e.rayon} km</b></label>
+  <div class="res" id="dP">${[5,10,15,20,30].map(k=>`<button type="button" data-km="${k}" class="${+e.rayon===k?'on':''}">${k} km</button>`).join('')}</div>
+  <input id="dR" type="range" min="1" max="50" value="${e.rayon}" aria-label="Distance maximale en kilomètres" style="padding:0;width:100%;height:36px;margin-top:6px;accent-color:var(--teal)">
+  <p class="small mut" id="dC"></p><p class="small" id="dErr" style="color:var(--bad)"></p><button class="btn p w" id="dOk">Enregistrer</button>`);
+  choixVille('d',c=>{choix=c});
+  const cons=()=>{const m=Math.max(0,...tr.map(k=>TRANSP.find(x=>x[0]===k)[2]));$('#dC').textContent=m?`Conseil : environ ${m} km au maximum avec ce moyen de transport, pour moins de 45 minutes de trajet.`:''};cons();
+  $('#dT').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const k=b.dataset.t;tr=tr.includes(k)?tr.filter(x=>x!==k):[...tr,k];b.classList.toggle('on');const m=Math.max(0,...tr.map(k=>TRANSP.find(x=>x[0]===k)[2]));if(m)km(m);cons()});
+  const km=v=>{$('#dR').value=v;$('#dRV').textContent=v+' km';$('#dP').querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.km===+v))};
+  $('#dR').addEventListener('input',ev=>km(ev.target.value));
+  $('#dP').addEventListener('click',ev=>{const b=ev.target.closest('[data-km]');if(b)km(b.dataset.km)});
+  $('#dOk').addEventListener('click',async()=>{if(!choix||$('#dQ').value.trim()!==choix.nom){$('#dErr').textContent='Choisis ta ville dans la liste qui s\'affiche.';return}
+    const d=await agir('PUT','/moi/depart',{ville:choix.nom,lat:choix.lat,lon:choix.lon,transports:tr,rayon:+$('#dR').value});if(d){close();chargeCle='';render()}});
+}
+/* ---------- mes pistes ---------- */
+const ORD=['rdv','rap','inj','nv','acc','ref'];
+function ligne(c){const l=c.d[0];return c.val==='attente'?'En attente de validation par ton professeur':c.next&&c.next.d>=today?`${quand(c.next.d)}${c.next.h?' à '+esc(c.next.h):''} : ${esc(c.next.t)}`:l?`${fc(l.d)} · ${l.t} · ${esc(l.x)}`:'Pas encore contactée'}
+function pistes(){
+  const Lp=actives().sort((a,b)=>ORD.indexOf(a.st)-ORD.indexOf(b.st)),Ar=S.cib.filter(c=>c.arch);
+  $('#s-pistes').innerHTML=`<div class="row between" style="margin-top:14px"><h1>Mes pistes</h1><span class="st ${enCours()>=5?'ok':'wa'}">${enCours()} en cours</span></div>
+  <p class="small mut" style="margin:6px 0 4px">Garde toujours au moins 5 pistes en cours. Touche une piste pour noter un contact ou savoir quoi dire.</p>
+  ${Lp.length?Lp.map(c=>`<button class="prow ${c.st==='ref'?'off':''}" data-piste="${c.id}" style="--f:${(CH[c.f]||CH['?']).c}"><span class="t"><b>${esc(c.n)}</b><span class="sub">${ligne(c)}</span></span><span class="st ${c.val==='attente'?'nv':STA[c.st][1]}">${c.val==='attente'?'À valider':STA[c.st][0]}</span></button>`).join(''):`<div class="card"><p style="margin:0 0 10px">Tu n'as pas encore de piste. Repère des entreprises sur la carte, ou ajoute celle que tu connais déjà.</p><button class="btn p w" data-go="chercher">Chercher des pistes</button></div>`}
+  <button class="btn w" data-plus="piste" style="margin-top:6px">Ajouter une entreprise trouvée ailleurs</button>
+  ${Ar.length?`<details class="card"><summary>Pistes abandonnées (${Ar.length})</summary><p class="small mut" style="margin:0">Tes démarches restent dans ton historique : elles comptent pour ton professeur.</p>${Ar.map(c=>`<div class="ent"><span>${esc(c.n)} · ${pl(c.d.length,'contact')}</span>${c.val==='non'?'<span class="small mut">Non retenue</span>':`<button class="btn" data-remet="${c.id}" style="min-height:44px">Reprendre</button>`}</div>`).join('')}</details>`:''}`;
+}
+function piste(id){
+  const c=byId(id);if(!c)return;const ouverte=!['ref','acc'].includes(c.st)&&!c.arch&&c.val!=='attente';
+  modal(`<div class="row between">${chip(c.f)}<span class="st ${STA[c.st][1]}">${STA[c.st][0]}</span></div><h2 style="margin-top:8px">${esc(c.n)}</h2><p class="small mut" style="margin:4px 0 12px">${esc(c.fam)}${c.ville?' · '+esc(c.ville):''}</p>
+  ${c.val==='attente'?`<p class="small">Ton professeur doit d'abord dire si cette entreprise correspond à ta formation. Tu verras sa réponse ici.</p>`:''}
+  ${c.next&&c.next.d>=today?`<div class="card" style="margin-top:0"><b>${quand(c.next.d)}${c.next.h?' à '+esc(c.next.h):''}</b><span class="d">${esc(c.next.t)}</span></div>`:''}
+  ${ouverte?`<button class="btn p w" data-note="${c.id}">Noter un contact</button>`:''}
+  <div class="row" style="margin-top:8px;flex-wrap:nowrap"><button class="btn" data-kit="${c.id}" style="flex:1">Que dire ?</button><a class="btn" href="lettre.html" target="_blank" rel="noopener" data-lettre="${c.id}" style="flex:1">Ma lettre</a><a class="btn" href="${gmaps(c.n,c.adresse||c.ville)}" target="_blank" rel="noopener" style="flex:1">Itinéraire</a></div>
+  <h3 style="margin-top:16px">Historique</h3>${c.d.length?`<ul class="log">${c.d.map(x=>`<li><b>${fc(x.d)} · ${esc(x.t)} · ${(STA[x.r]||['',''])[0]}</b><br>${esc(x.x)}${CT.includes(x.t)&&x.r!=='acc'?`<br><button class="link small" data-delc="${x.id}" style="min-height:36px;padding:4px 0">Je me suis trompé : retirer</button>`:''}</li>`).join('')}</ul>`:'<p class="small mut">Pas encore contactée.</p>'}
+  ${c.st==='acc'||c.arch?'':`<button class="btn w bad" data-ret="${c.id}" style="margin-top:12px">${c.d.length?'Abandonner cette piste':'Retirer de mes pistes'}</button>`}`);
+}
+/* ---------- noter (bouton +) ---------- */
+function plus(){if(!S){toast("Pas encore de PFMP programmée pour ta classe.");return}modal(`<h2>Qu'est-ce qui s'est passé ?</h2>
+  <button class="opt" data-plus="contact"><span class="ic">📞</span><span><b>J'ai contacté une entreprise</b><span class="sub">Une visite, un appel ou un mail</span></span></button>
+  <button class="opt" data-plus="ent"><span class="ic">👥</span><span><b>J'ai parlé à quelqu'un de mon entourage</b><span class="sub">Famille, amis, voisins</span></span></button>
+  <button class="opt" data-plus="piste"><span class="ic">📍</span><span><b>J'ai trouvé une nouvelle entreprise</b><span class="sub">Pour l'ajouter à mes pistes</span></span></button>
+  <button class="opt" data-plus="cv"><span class="ic">📄</span><span><b>J'ai préparé mon CV ou ma lettre</b><span class="sub">Rédigé, mis à jour ou imprimé</span></span></button>
+  <button class="opt" data-plus="accord"><span class="ic">🎉</span><span><b>J'ai un accord pour mon stage</b><span class="sub">Même si je l'ai trouvé sans l'appli</span></span></button>`)}
+function choisir(acc){const Lp=actives().filter(c=>!['ref','acc'].includes(c.st)&&c.val!=='attente');
+  if(!acc){
+    modal(`<h2>Qui as-tu contacté ?</h2><label for="cN">Nom du magasin, de l'entreprise ou du service</label>
+    <div class="row" style="flex-wrap:nowrap"><input id="cN" placeholder="Ex. : Intermarché, mairie de Mennecy" style="flex:1"><button class="btn p" id="cGo">Continuer</button></div>
+    ${Lp.length?`<p class="small mut" style="margin:16px 0 6px">Ou choisis dans tes pistes :</p>`+Lp.map(c=>`<button class="prow" data-note="${c.id}" style="--f:${(CH[c.f]||CH['?']).c}"><span class="t"><b>${esc(c.n)}</b><span class="sub">${STA[c.st][0]}</span></span></button>`).join(''):''}`);
+    const go=async()=>{const n=$('#cN').value.trim();if(!n){$('#cN').focus();return}
+      const deja=actives().find(c=>c.n.toLowerCase()===n.toLowerCase());if(deja){noter(deja.id);return}
+      const d=await agir('POST','/moi/pistes',{source:'contact',nom:n});if(d)noter(d.cree.id)};
+    $('#cGo').addEventListener('click',go);$('#cN').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+    return}
+  modal(`<h2>${acc?'Quelle entreprise a dit oui ?':'Quelle entreprise as-tu contactée ?'}</h2>${Lp.map(c=>`<button class="prow" data-${acc?'oui':'note'}="${c.id}" style="--f:${(CH[c.f]||CH['?']).c}"><span class="t"><b>${esc(c.n)}</b><span class="sub">${STA[c.st][0]}</span></span></button>`).join('')||'<p class="small mut">Aucune piste en cours.</p>'}
+  <button class="btn w" data-plus="${acc?'ailleurs':'piste'}" style="margin-top:6px">${acc?'Une entreprise trouvée autrement':"Une entreprise qui n'est pas dans mes pistes"}</button>`)}
+function noter(id){const c=byId(id);let t='Visite',r=null;
+  modal(`<p class="small mut" style="margin:0">Noter un contact</p><h2>${esc(c.n)}</h2>
+  <label>Comment ?</label><div class="res" id="nT"><button data-t="Visite" class="on">Visite</button><button data-t="Appel">Appel</button><button data-t="Mail">Mail</button></div>
+  <label>Résultat</label><div class="res" id="nR">${RES.map(([k,x])=>`<button data-r="${k}">${x}</button>`).join('')}</div>
+  <label for="nQ">Qui as-tu eu ? <span class="mut" style="font-weight:400">(nom ou fonction)</span></label><input id="nQ" placeholder="Ex. : la responsable du magasin">
+  <label for="nX">Ce qu'on t'a dit</label><textarea id="nX" placeholder="Ex. : repasser mardi avec mon CV"></textarea>
+  <div id="nNext" hidden><label for="nD">Quand dois-tu rappeler ou y retourner ?</label><div class="row" style="flex-wrap:nowrap"><input id="nD" type="date" style="flex:2" min="${iso(today)}"><input id="nH" placeholder="Heure" style="flex:1"></div></div>
+  <button class="btn p w" id="nOk" style="margin-top:14px" disabled>Enregistrer</button>`);
+  $('#nT').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;t=b.dataset.t;$('#nT').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
+  $('#nR').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;r=b.dataset.r;$('#nR').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));$('#nOk').disabled=false;$('#nNext').hidden=!['rap','rdv','inj'].includes(r)});
+  $('#nOk').addEventListener('click',async()=>{const q=$('#nQ').value.trim(),dv=$('#nD').value;
+    const pro=dv&&!$('#nNext').hidden?{date:dv,heure:$('#nH').value.trim(),txt:r==='rdv'?`Rendez-vous${q?' avec '+q:''}. Apporte ton CV.`:`${r==='inj'?'Rappeler':'Relancer'}${q?' et demander '+q:''}.`}:null;
+    const d=await agir('POST',`/moi/pistes/${c.id}/contacts`,{type:t,resultat:r,qui:q,texte:$('#nX').value.trim(),prochaine:pro});
+    if(!d)return;if(r==='acc'){bravo();return}close();render();toast(r==='ref'?'Noté. Pense à ajouter une nouvelle piste.':'Contact noté ✓')});
+}
+function entourage(){modal(`<h2>J'ai parlé à quelqu'un</h2><label for="eL">Ton lien avec cette personne <span class="mut" style="font-weight:400">(pas son nom)</span></label><input id="eL" placeholder="Ex. : mon oncle, ma voisine">
+  <label for="eR">Sa réponse</label><input id="eR" placeholder="Ex. : va demander à son patron"><button class="btn p w" id="eOk" style="margin-top:14px">Enregistrer</button>`);
+  $('#eOk').addEventListener('click',async()=>{const l=$('#eL').value.trim();if(!l){$('#eL').focus();return}const d=await agir('POST','/moi/entourage',{lien:l,reponse:$('#eR').value.trim()});if(d){close();render();toast(`Entourage : ${Math.min(S.ent.length,5)}/5 ✓`)}})}
+const Q1=`<option value="">Choisis</option><option value="A">Dans un magasin où le client entre librement</option><option value="B">Chez le client, au téléphone, en rendez-vous</option><option value="C">À un comptoir, un standard, une réception</option>`;
+const Q2=`<option value="">Choisis</option><option value="A">Mise en rayon, vitrines, encaissement, conseil</option><option value="B">Prospection, rendez-vous, devis, relances</option><option value="C">Accueil, information, orientation, agenda</option><option value="X">Autre chose</option>`;
+function nouvelle(acc){
+  modal(`<h2>${acc?"J'ai trouvé mon stage":'Une nouvelle entreprise'}</h2><p class="small">${acc?"Même si tu l'as trouvé sans l'appli : ton professeur est prévenu.":'Réponds à deux questions : on te dit si elle correspond à ta formation.'}</p>
+  <label for="aN">Nom de l'entreprise</label><input id="aN"><label for="aV">Ville</label><input id="aV">
+  ${acc?`<label for="aW">Comment l'as-tu trouvée ?</label><select id="aW"><option>Par mon entourage</option><option>En démarchant seul</option><option>Grâce au lycée</option><option>Autrement</option></select>`:''}
+  <label for="a1">Où se passe la relation avec le client ?</label><select id="a1">${Q1}</select>
+  <label for="a2">Que ferais-tu surtout ?</label><select id="a2">${Q2}</select><textarea id="a2t" hidden style="margin-top:8px" placeholder="Décris ce que tu ferais (ex. : accueillir les clients et préparer les commandes)"></textarea>
+  <p class="small" id="aErr" style="color:var(--bad)"></p><button class="btn p w" id="aOk">${acc?"C'est noté":'Vérifier'}</button><div id="aRes"></div>`);
+  $('#a2').addEventListener('change',e=>{$('#a2t').hidden=e.target.value!=='X'});
+  $('#aOk').addEventListener('click',async()=>{const n=$('#aN').value.trim(),v=$('#aV').value.trim(),a=$('#a1').value,b=$('#a2').value,q=$('#a2t').value.trim();
+    if(!n||!a||!b){$('#aErr').textContent="Indique le nom de l'entreprise et réponds aux deux questions.";return}
+    if(b==='X'&&q.length<10){$('#aErr').textContent='Décris en quelques mots ce que tu ferais.';return}
+    $('#aErr').textContent='';
+    if(acc){const d=await agir('POST','/moi/accord',{nom:n,ville:v,q1:a,q2:b,quoi:q,comment:$('#aW').value});if(d)bravo();return}
+    const d=await agir('POST','/moi/pistes',{source:'eleve',nom:n,ville:v,q1:a,q2:b,quoi:q});if(!d)return;render();
+    const c=byId(d.cree.id);
+    $('#aRes').innerHTML=d.cree.ok?`<div class="card"><b>✓ Compatible : ${CH[c.f].n}</b><p class="small" style="margin:4px 0 10px">${esc(n)} est ajoutée à tes pistes.</p><button class="btn p w" data-note="${c.id}">Noter un contact maintenant</button></div>`
+    :`<div class="card"><b>À faire valider par ton professeur</b><p class="small" style="margin:4px 0 0">Tes réponses ne disent pas clairement si ${esc(n)} correspond à ta formation. Ta demande lui est envoyée : il te répondra ici.</p></div>`});
+}
+/* ---------- la fête : confettis plein écran ---------- */
+function fete(emoji,titre,texte,bouton){
+  if($('#fete'))$('#fete').remove();
+  const f=document.createElement('div');f.id='fete';f.setAttribute('role','dialog');f.setAttribute('aria-modal','true');
+  f.innerHTML=`<canvas></canvas><div class="boite"><div class="gros">${emoji}</div><h2>${titre}</h2><p>${texte}</p><button class="btn p w" style="margin-top:8px">${bouton}</button></div>`;
+  document.body.appendChild(f);const fin=()=>f.remove();f.querySelector('button').addEventListener('click',fin);f.querySelector('button').focus();
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cv=f.querySelector('canvas'),cx=cv.getContext('2d'),W=cv.width=innerWidth*devicePixelRatio,H=cv.height=innerHeight*devicePixelRatio,k=devicePixelRatio;
+  const C=['#115e57','#e8813a','#f6c344','#5cc2b5','#e5484d','#7c5cff','#ffffff'];
+  const P=Array.from({length:180},(_,i)=>({x:W/2+(Math.random()-.5)*W*.2,y:H*.55,vx:(Math.random()-.5)*26*k,vy:-(12+Math.random()*22)*k,r:(4+Math.random()*6)*k,c:C[i%C.length],a:Math.random()*6,va:(Math.random()-.5)*.4,f:Math.random()<.5}));
+  let t0=performance.now();
+  (function anim(t){if(!f.isConnected)return;const dt=Math.min(32,t-t0)/16;t0=t;cx.clearRect(0,0,W,H);let vivants=0;
+    for(const p of P){p.vy+=.55*k*dt;p.vx*=.985;p.x+=p.vx*dt;p.y+=p.vy*dt;p.a+=p.va*dt;if(p.y<H+20*k)vivants++;
+      cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;if(p.f)cx.fillRect(-p.r,-p.r/2,p.r*2,p.r);else{cx.beginPath();cx.arc(0,0,p.r/1.4,0,7);cx.fill()}cx.restore()}
+    if(vivants)requestAnimationFrame(anim)})(t0);
+}
+function bravo(){
+  fete('🤝','Tu as un accord !',`<b>${esc(S.accord.n)}</b> est d'accord pour t'accueillir. Bravo, c'est toi qui l'as obtenu !`,'Voir la suite');
+  modal(`<h2>Bravo, tu as un accord ! 🎉</h2><p>Prochaine étape pour <b>${esc(S.accord.n)}</b> : l'entreprise remplit et signe ta convention, puis tu la déposes complète au lycée. Ton stage est trouvé dès que le lycée l'accepte.</p>
+  <label for="kT">Nom et téléphone de ton tuteur</label><input id="kT" placeholder="Pour la convention" value="${esc(S.accord.tut)}">
+  <details><summary>Mes horaires : ce que dit la loi</summary>${HORAIRES}</details>
+  <button class="btn p w" id="kOk">C'est noté</button>`);
+  $('#kOk').addEventListener('click',async()=>{const t=$('#kT').value.trim();if(t)await agir('PUT','/moi/accord',{tuteur:t});close();go('semaine')});
+}
+function kit(id){const c=byId(id),pres=`je m'appelle ${esc(R.eleve.prenom)}, je suis en ${NIVTXT()} ${BAC()} au lycée Paul Belmondo à Arpajon. Je cherche un lieu de stage pour ma période de formation ${PER()}`;
+  modal(`<h2>Que dire à ${esc(c.n)} ?</h2><h3 style="margin-top:12px">Sur place (le plus efficace)</h3><blockquote>Bonjour, ${pres}. Est-ce que je pourrais parler au ou à la responsable, s'il vous plaît ?</blockquote>
+  <p class="small">Puis : « Pendant ce stage, je dois découvrir ${DECOUV()}. Je vous ai apporté mon CV. »</p>
+  <h3 style="margin-top:12px">Au téléphone</h3><blockquote>Bonjour, ${pres}. Pourrais-je parler à la personne qui s'occupe des stagiaires ?</blockquote>
+  <details><summary>Si on me répond…</summary><ul class="small"><li>« On ne prend pas de stagiaires » : « Puis-je vous laisser mon CV au cas où ? Connaissez-vous un autre endroit qui pourrait m'accueillir ? »</li><li>« On ne prend pas de mineurs » : « Beaucoup d'élèves de mon lycée ont moins de 18 ans et font leur stage en entreprise : la convention prévoit tout, et mon professeur peut vous appeler. »</li><li>« Le responsable n'est pas là » : « Quel est son nom, et quand puis-je le trouver ? »</li><li>« Envoyez votre CV » : « Avec plaisir. À quelle adresse, et à quel nom ? » Je relance 3 jours après.</li><li>« Pas le temps d'encadrer » : « Un tuteur suffit, et mon professeur passe pendant le stage. »</li></ul></details>
+  <p class="small mut">Avant d'y aller : tenue correcte, téléphone rangé, CV imprimé. J'évite midi, le samedi après-midi et l'heure de fermeture.</p>`)}
+/* ---------- mon dossier ---------- */
+function dossier(){
+  const e=R.eleve;
+  $('#s-dossier').innerHTML=`<h1 style="margin-top:14px">Mon dossier</h1>
+  <p class="mut" style="margin:4px 0 0">${esc(e.prenom+' '+e.nom)} · ${esc(R.classe.nom)}${P?' · '+esc(P.nom)+' '+PER():''}</p>
+  <div class="card"><h2>Mon CV et ma lettre</h2><p class="small mut" style="margin:4px 0 10px">Crée-les ici : choisis dans les listes, ils s'écrivent tout seuls. Imprime-les ou enregistre-les en PDF.</p>
+    <div class="row" style="flex-wrap:nowrap"><a class="btn" style="flex:1" href="cv.html" target="_blank" rel="noopener">Créer mon CV</a><a class="btn" style="flex:1" href="lettre.html" target="_blank" rel="noopener">Créer ma lettre</a></div>
+    <h3 style="margin-top:16px">Tu les as déjà ?</h3><p class="small mut" style="margin:4px 0 6px">Importe-les en PDF ou en photo : tu les retrouves partout, et ton professeur peut les relire.</p>
+    ${docsHtml()}${S&&S.log.length?`<p class="small mut" style="margin:12px 0 2px">« CV ou lettre préparés », noté dans tes démarches :</p><ul class="log">${S.log.map(j=>`<li>${fc(j.d)} <button class="link small" data-deljo="${j.id}" style="min-height:36px;padding:0 0 0 8px">Retirer</button></li>`).join('')}</ul>`:''}</div>
+  ${S?`<div class="card"><div class="row between"><h2>Mon entourage</h2><span class="st ${S.ent.length>=5?'ok':'wa'}">${Math.min(S.ent.length,5)}/5</span></div>
+    ${S.ent.length?`<ul class="log">${S.ent.map(x=>`<li><b>${esc(x.l)}</b> · ${esc(x.r)}${` <button class="link small" data-dele="${x.id}" style="min-height:36px;padding:4px 0">Retirer</button>`}</li>`).join('')}</ul>`:'<p class="small mut">Personne pour l\'instant.</p>'}
+    <details><summary>Le message à envoyer</summary><blockquote>${esc(MSG())}</blockquote><button class="btn w" data-copy>${ENV()}</button></details>
+    <button class="btn w" data-ent>J'en ai parlé à quelqu'un</button></div>
+  <button class="dep" data-dep><span><span class="small mut d">Mon point de départ</span><b>${esc(e.ville||'À choisir')}</b> · ${e.rayon} km</span><span class="link" style="min-height:0;padding:0">Modifier</span></button>`:''}
+  <div class="card"><h2>Mes droits en stage</h2><details><summary>Mes horaires : ce que dit la loi</summary>${HORAIRES}</details>
+    <details><summary>Ma convention : ce qu'elle doit contenir</summary><ul class="small" style="padding-left:18px">${CONV().map(t=>`<li>${esc(t)}</li>`).join('')}</ul></details></div>
+  ${S&&!S.accord?`<button class="btn w" data-plus="accord">J'ai trouvé mon stage</button>`:''}
+  <div class="card"><h2>Comment ça marche ?</h2><ol style="padding-left:20px;margin:8px 0 0"><li><b>Ton rythme</b> : chaque semaine, quelques démarches. Plus la date limite approche, plus il y en a.</li><li><b>Ton entourage</b> : parles-en à 5 personnes, c'est souvent là que tout commence.</li><li><b>Tes pistes et tes contacts</b> : repère des entreprises sur la carte, contacte-les et note tout avec le bouton +.</li><li><b>Ta convention</b> : quand une entreprise dit oui, fais-la remplir et dépose-la complète au lycée. Ton stage est alors trouvé.</li></ol></div>
+  <button class="btn w" data-out>Se déconnecter</button>`;
+}
+/* ---------- aide ---------- */
+const AIDE={semaine:"Ici, tu vois ce qu'il te reste à faire cette semaine. Le nombre de démarches augmente à l'approche de la date limite. Tout ce que tu notes avec le bouton + compte.",chercher:"Choisis ce que tu veux découvrir, puis touche un repère sur la carte. Les entreprises proposées correspondent à ta formation : ajoute à tes pistes celles qui t'intéressent.",pistes:"Toutes les entreprises que tu vises. Touche une piste pour noter un contact, savoir quoi dire ou préparer ta lettre. Garde toujours au moins 5 pistes en cours.",dossier:"Ton CV, ta lettre, ton entourage et les règles de ton stage."};
+/* ---------- événements ---------- */
+document.querySelector('.nav').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b)go(b.dataset.v)});
+$('#plusBtn').addEventListener('click',plus);$('#helpBtn').addEventListener('click',()=>modal(`<h2>À quoi sert cet écran ?</h2><p style="font-size:17px">${AIDE[vue]}</p>`));
+$('#depBtn').addEventListener('click',depart);
+$('#seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;champ=b.dataset.f;fam='';sel=null;chercher()});
+$('#fams').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fam=b.dataset.fam;sel=null;chercher()});
+$('#tog').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;vueCh=b.dataset.vue;chercher()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+document.addEventListener('click',async e=>{
+  const g=a=>e.target.closest(`[${a}]`);let t;
+  if(t=g('data-close')){close();return}
+  if(t=g('data-go')){close();go(t.dataset.go);return}
+  if(t=g('data-plus')){const k=t.dataset.plus;if(k==='menu')plus();else if(k==='contact')choisir(false);else if(k==='ent')entourage();else if(k==='piste')nouvelle(false);else if(k==='ailleurs')nouvelle(true);
+    else if(k==='cv'){if(await agir('POST','/moi/journal',{type:'cv'})){close();render();toastAnnuler('Démarche notée ✓',()=>retirerCv())}}
+    else if(S.accord){close();go('semaine');toast('Tu as déjà un accord en cours.')}else choisir(true);return}
+  if(t=g('data-oui')){if(await agir('POST','/moi/accord',{piste_id:+t.dataset.oui}))bravo();return}
+  if(t=g('data-note')){noter(t.dataset.note);return}
+  if(t=g('data-piste')){piste(t.dataset.piste);return}
+  if(t=g('data-kit')){kit(t.dataset.kit);return}
+  if(t=g('data-ent')){entourage();return}
+  if(t=g('data-dep')){depart();return}
+  if(t=g('data-tuteur')){bravo();return}
+  if(t=g('data-add')){const x=ENTS[+t.dataset.add];if(!x)return;t.disabled=true;if(await agir('POST','/moi/pistes',{source:'carte',famille:x.famille,nom:x.nom,ville:x.ville,adresse:x.adresse,siret:x.siret,lat:x.lat,lon:x.lon},`${x.nom} ajoutée à tes pistes ✓`))dessiner();return}
+  if(t=g('data-ret')){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='Touche encore pour confirmer';return}const c=byId(t.dataset.ret);if(await agir('DELETE','/moi/pistes/'+c.id,null,c.d.length?'Piste abandonnée. Tes démarches restent dans ton historique.':'Piste retirée.')){close();render()}return}
+  if(t=g('data-delc')){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='Touche encore pour retirer ce contact';return}if(await agir('DELETE','/moi/contacts/'+t.dataset.delc,null,'Contact retiré.')){close();render()}return}
+  if(t=g('data-dele')){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='Touche encore pour retirer';return}if(await agir('DELETE','/moi/entourage/'+t.dataset.dele,null,'Retiré.'))render();return}
+  if(t=g('data-annacc')){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent="Touche encore : tu repasses en recherche, ton professeur sera prévenu";return}if(await agir('DELETE','/moi/accord',null,'Accord annulé. Tu repasses en recherche.')){close();go('semaine')}return}
+  if(t=g('data-docimp')){DOC_T=t.dataset.docimp;const i=$('#docFile');i.value='';i.onchange=()=>docEnvoyer(i.files[0]);i.click();return}
+  if(t=g('data-docvoir')){docVoir(t.dataset.docvoir);return}
+  if(t=g('data-docdel')){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='Touche encore pour retirer';return}if(await agir('DELETE','/moi/documents/'+t.dataset.docdel,null,'Retiré.'))render();return}
+  if(t=g('data-deljo')){if(t.dataset.ok!=='1'){t.dataset.ok='1';t.textContent='Touche encore pour retirer';return}retirerCv(t.dataset.deljo);return}
+  if(t=g('data-refusvu')){try{localStorage.setItem(cleRefus(),'1')}catch(e){}t.closest('.avis').remove();return}
+  if(t=g('data-remet')){if(await agir('PATCH','/moi/pistes/'+t.dataset.remet,{archive:false}))render();return}
+  if(t=g('data-lettre')){const c=byId(t.dataset.lettre);try{localStorage.setItem('lettre-pfmp-cible',JSON.stringify({entreprise:c.n,champ:c.f,debut:P.debut,fin:P.fin,contact:''}))}catch(err){}return}
+  if(t=g('data-copy')){if(PARTAGE()){navigator.share({text:MSG()}).catch(()=>{});return}copy(MSG(),t);return}
+  if(t=g('data-conv')){const i=+t.dataset.conv,L=CONV().map((_,k)=>!!S.accord.check[k]);L[i]=!L[i];S.accord.check=L;semaine();agir('PUT','/moi/accord',{controle:L});return}
+  if(t=g('data-out')){api('POST','/deconnexion').catch(()=>{});setTok('');sortir();return}
+});
+/* ---------- connexion et premiers pas ---------- */
+function ecran(id){document.querySelectorAll('.full').forEach(x=>x.classList.toggle('on',x.id===id));window.scrollTo(0,0)}
+function sortir(){R=null;S=null;close();document.body.classList.add('out');ecran('login')}
+let oi=0,ob={};
+const ONB=[()=>`${S&&jours()>0?`<div class="big">${pl(jours(),'jour')}</div>`:''}<h2>Bienvenue, ${esc(R.eleve.prenom)} !</h2>${S?`<p>Ton stage a lieu <b>${PER()}</b>. Ta convention est à déposer au lycée, si possible avant le <b>${fj(BUT)}</b>.</p>`:''}<p class="mut">Ici, tu trouves où chercher, tu notes ce que tu fais avec le bouton +, et ton professeur suit ton avancée.</p>`,
+()=>`<h2>Où habites-tu ?</h2><p class="mut">Pour te montrer les entreprises autour de chez toi.</p><label for="oQ">Ma ville</label><input id="oQ" placeholder="Ta ville" autocomplete="off" value="${esc(ob.ville||'')}"><div class="sug" id="oS"></div><label>Comment pourrais-tu aller à ton stage ?</label><p class="small mut" style="margin:6px 0 0">Choisis tout ce qui est possible, pas seulement ce que tu fais pour venir au lycée : pour un stage, prendre le bus ou le RER, c'est normal.</p><div class="res" id="oT">${TRANSP.map(t=>`<button data-t="${t[0]}" class="${(ob.transports||[]).includes(t[0])?'on':''}">${t[1]}</button>`).join('')}</div>`,
+()=>S&&ryt().k>=2&&!contacts().length?`<h2>Il reste peu de temps</h2><p>C'est court, mais c'est jouable : chaque année, des élèves trouvent leur stage dans ce délai.</p><p class="mut">L'appli te donne un plan pour cette semaine, en 3 étapes. Ton professeur suit ton avancée et peut t'aider.</p>`
+:`<h2>Un peu chaque semaine</h2><p>Chaque semaine, tu fais quelques démarches : parler à ton entourage, repérer des pistes, contacter des entreprises.</p><p class="mut">Plus la date approche, plus il y en a. Commence par en parler à <b>5 personnes</b> de ton entourage : l'appli te donne le message à envoyer.</p>`];
+function onb(){$('#onbBody').innerHTML=ONB[oi]();document.querySelectorAll('#onbDots span').forEach((d,i)=>d.classList.toggle('on',i===oi));$('#onbNext').textContent=oi===ONB.length-1?"C'est parti":'Suivant';
+  const tr=$('#oT');if(tr){tr.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.t,L=ob.transports||[];ob.transports=L.includes(k)?L.filter(x=>x!==k):[...L,k];b.classList.toggle('on');const m=Math.max(0,...ob.transports.map(k=>TRANSP.find(x=>x[0]===k)[2]));if(m)ob.rayon=m});
+    choixVille('o',c=>{ob.ville=c.nom;ob.lat=c.lat;ob.lon=c.lon})}}
+async function finOnb(){const b={onb:1};if(ob.lat!=null)Object.assign(b,{ville:ob.ville,lat:ob.lat,lon:ob.lon});if(ob.transports)b.transports=ob.transports;if(ob.rayon)b.rayon=ob.rayon;await agir('PUT','/moi/depart',b);entrer()}
+function entrer(){document.body.classList.remove('out');ecran(null);go('semaine')}
+async function demarrer(){
+  try{const d=await api('GET','/moi');charger(d);if(!REF)REF=await api('GET','/referentiel')}catch(e){$('#lgErr').textContent=e.message;return}
+  if(!R.eleve.onb){oi=0;ob={ville:R.eleve.ville,lat:R.eleve.lat,lon:R.eleve.lon,transports:R.eleve.transports,rayon:R.eleve.rayon};ecran('onb');onb()}else entrer();
+}
+$('#loginForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('#lgId').value.trim().toLowerCase(),code=$('#lgCode').value.trim();
+  if(!/^[a-z-]+\.[a-z-]+\d*$/.test(id)){$('#lgErr').textContent="Ton identifiant s'écrit prénom.nom, en minuscules, avec un point, sans accent.";return}
+  if(!code){$('#lgErr').textContent='Saisis ton code.';return}
+  $('#lgErr').textContent='';$('#lgBtn').disabled=true;
+  try{const d=await api('POST','/connexion',{identifiant:id,secret:code});if(d.role!=='eleve'){location.href='prof.html';return}setTok(d.token);await demarrer()}catch(err){$('#lgErr').textContent=err.message}finally{$('#lgBtn').disabled=false}});
+$('#onbNext').addEventListener('click',()=>{if(oi===1&&ob.ville&&ob.lat==null){toast('Choisis ta ville dans la liste qui s\'affiche.');return}if(oi<ONB.length-1){oi++;onb()}else finOnb()});
+$('#onbSkip').addEventListener('click',finOnb);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&R&&TOK)api('GET','/moi').then(d=>{charger(d);if(!$('#modal').classList.contains('on'))render()}).catch(()=>{})});
+if(TOK)demarrer();
+}
+</script>
+</body>
+</html>

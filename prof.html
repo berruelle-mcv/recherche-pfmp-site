@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<script>if(/\/pfmp$/.test(location.pathname))location.replace(location.pathname+'/'+location.search)</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#115e57">
+<title>Ma PFMP · Espace professeur</title>
+<link rel="icon" href="icone.svg" type="image/svg+xml">
+<style>
+
+/* VOICE travail : un tableau de bord de prof, sobre, qui dit d'abord ce qui demande une action
+   IDEA le cahier de suivi du professeur principal : une ligne par élève, les décisions en attente, les traces des relances
+   PICTURE en tête, la classe en 26 cases colorées selon l'avancée, avec une pastille pour chaque alerte
+   COLOUR celles de Ma PFMP : fond crème, vert-bleu #115e57, pastille orange ; champs Accueil orange, A bleu, B violet
+   TYPE police système, comme Ma PFMP
+   LAYOUT pleine largeur jusqu'à 1240 px (le prof est souvent sur ordinateur), une colonne sur téléphone, fiche élève en panneau latéral */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f3ef,#0f1a19);--ink:light-dark(#17252b,#e6efed);--mut:light-dark(#5b6466,#a6b3b1);--teal:light-dark(#115e57,#5cc2b5);--or:#e8813a;
+--card:light-dark(#ffffff,#162523);--line:light-dark(#dcdad3,#2b3d3b);--acc:light-dark(#115e57,#5cc2b5);
+--acc-s:light-dark(#e1efec,#173a36);--ok:light-dark(#15803d,#5fd38d);--ok-s:light-dark(#e2f5e9,#173a28);
+--warn:light-dark(#b45309,#f0b35a);--warn-s:light-dark(#fdf0dc,#3a2c14);--bad:light-dark(#c0262d,#ff8a8f);--bad-s:light-dark(#fde5e5,#3d1a1d);
+--fA:light-dark(#2563a8,#86b4ef);--fAs:light-dark(#e2ecf8,#1a2b44);--fB:light-dark(#6d3fb3,#b99bf0);--fBs:light-dark(#efe7fb,#2b1f45);
+--fC:light-dark(#c2560c,#f5a15c);--fCs:light-dark(#fdebdc,#3d2512)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+h1,h2,h3{font-weight:700;line-height:1.1;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1{font-size:clamp(26px,3.4vw,36px)}h2{font-size:21px}h3{font-size:17px}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.mut{color:var(--mut)}.small{font-size:14px}.d{display:block}
+.hdr{background:var(--teal);color:#fff;position:sticky;top:0;z-index:5}
+.hdr .in{max-width:1240px;margin:0 auto;padding:10px max(3vw,16px);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.lg{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px}
+.lg span{position:relative;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#fff;color:#115e57;font-weight:800;font-size:20px}
+.lg i{position:absolute;top:4px;right:4px;width:9px;height:9px;border-radius:50%;background:var(--or)}
+.hdr .sp{font-weight:700;padding-left:12px;border-left:1px solid rgba(255,255,255,.45)}
+.hdr .who{margin-left:auto;font-size:15px}.hdr a{color:#fff}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(3vw,16px) 72px}
+.etape{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--teal);padding:18px 0 8px}
+.etape span{width:9px;height:9px;border-radius:50%;background:var(--or)}
+.intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;align-items:end}
+@media(max-width:760px){.intro{grid-template-columns:1fr}}
+.intro p{margin:6px 0 0}
+.demo{font-size:13px;color:var(--mut);margin:8px 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0;box-shadow:0 1px 3px rgba(23,37,43,.06)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.between{justify-content:space-between}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-weight:700;color:var(--ink);text-decoration:none}
+.btn.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn.bad{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+label{display:block;font-size:14px;font-weight:700;margin:10px 0 4px}
+input,select,textarea{width:100%;min-height:44px;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+textarea{min-height:76px}
+input[type=checkbox]{width:22px;height:22px;min-height:0;accent-color:var(--acc)}
+.pill{display:inline-block;font-size:14px;font-weight:700;padding:6px 12px;border-radius:99px;background:var(--acc-s);color:var(--acc)}
+.pill.u{background:var(--bad-s);color:var(--bad)}
+.st{display:inline-block;font-size:13px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap;margin:1px 4px 1px 0}
+.st.ok{background:var(--ok-s);color:var(--ok)}.st.wa{background:var(--warn-s);color:var(--warn)}.st.no{background:var(--bad-s);color:var(--bad)}
+.st.nv,.st.acc{background:var(--acc-s);color:var(--acc)}.st.or{background:var(--fCs);color:var(--fC)}
+.chip{display:inline-block;font-size:13px;font-weight:700;padding:2px 9px;border-radius:99px;color:var(--f);background:var(--fs);white-space:nowrap}
+.okt{color:var(--ok);font-weight:700}
+/* la classe en cases */
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;margin-top:10px}
+.leg span{display:inline-flex;align-items:center;gap:6px}
+.leg i{width:14px;height:14px;border-radius:4px;border:2px solid var(--line);background:var(--bg)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:14px}
+.tile{position:relative;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 4px;min-height:66px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:700}
+.tile .ini{font-size:20px;line-height:1}.tile .nm{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile.sign,.leg .sign{background:var(--ok-s);border-color:var(--ok);color:var(--ok)}
+.tile.acc,.leg .acc{background:var(--warn-s);border-color:var(--warn);color:var(--warn)}
+.al{position:absolute;top:5px;right:5px;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 2px var(--card)}
+.al.orange,.leg .ao{background:var(--or)}.al.rouge,.leg .ar{background:var(--bad)}
+.leg .ao,.leg .ar{border-radius:50%;border:0}
+@media(max-width:600px){.tiles{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}.tile{min-height:54px;padding:6px 2px}.tile .ini{font-size:17px}.tile .nm{font-size:12px}}
+@media (prefers-reduced-motion:no-preference){.tile{transition:transform .15s}.tile:hover{transform:translateY(-2px)}}
+/* onglets */
+.af{list-style:none;margin:10px 0 0;padding:0}
+.af li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.af li:first-child{border-top:0}
+.af .ic{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--acc-s);color:var(--acc)}
+.af .ic.or{background:var(--warn-s);color:var(--warn)}.af .ic.no{background:var(--bad-s);color:var(--bad)}.af .ic.ok{background:var(--ok-s);color:var(--ok)}
+.af .tx{flex:1;min-width:0}.af .tx b{display:block}.af .tx span{font-size:14px;color:var(--mut)}
+.af li.fait .tx b{color:var(--mut);text-decoration:line-through}
+.af .btn{flex:none}
+@media(max-width:600px){.af li{flex-wrap:wrap}.af .btn{width:100%}}
+.retour{margin:16px 0 0}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:2px solid var(--line);margin:22px 0 4px}
+.tabs button{flex:none;border:0;background:none;min-height:48px;padding:8px 14px;font-weight:700;color:var(--mut);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button.on{color:var(--teal);border-bottom-color:var(--teal)}
+.tabs b{display:inline-block;min-width:22px;padding:0 6px;margin-left:6px;border-radius:99px;background:var(--or);color:#fff;font-size:13px}
+.tab{display:none}.tab.on{display:block}
+.tools{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr) auto;gap:10px;align-items:center;margin:14px 0}
+@media(max-width:900px){.tools{grid-template-columns:1fr}}
+.filt{display:flex;flex-wrap:wrap;gap:6px}
+.filt button{min-height:40px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-weight:700;font-size:14px}
+.filt button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+/* tableaux */
+.tw{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:13px;color:var(--mut);font-weight:700;padding:10px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tr.cl{cursor:pointer}tr.cl:hover{background:var(--acc-s)}
+.num{white-space:nowrap}
+.nb{background:none;border:0;padding:0;font-weight:700;text-align:left;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:17px;letter-spacing:.08em}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:0 14px}
+.kv{display:grid;grid-template-columns:9em minmax(0,1fr);gap:4px 12px;margin:10px 0;font-size:15px}
+.kv dt{color:var(--mut)}.kv dd{margin:0}
+.flag{background:var(--bad-s);color:var(--bad);border-radius:10px;padding:8px 12px;font-size:14px;font-weight:700}
+.verd{font-size:15px;margin:6px 0}
+.big2{font-size:19px;font-weight:700;margin:8px 0 0}
+.empty{color:var(--mut);padding:8px 0}
+.todo{list-style:none;padding:0;margin:8px 0 0}
+.todo li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.todo li:first-child{border-top:0}
+.dot{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:none;display:grid;place-items:center;font-size:14px;font-weight:700;padding:0}
+.dot.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.log{list-style:none;padding:0;margin:6px 0 0;font-size:14px}
+.log li{padding:6px 0;border-top:1px solid var(--line)}
+details{margin:2px 0}summary{cursor:pointer;min-height:40px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* messages */
+.pgrid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;margin-top:14px}
+@media(max-width:860px){.pgrid{grid-template-columns:1fr}}
+.tpl{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;margin:0 0 8px}
+.tpl.on{border:2px solid var(--teal);background:var(--acc-s)}
+.tpl b{display:block}.tpl span{font-size:14px;color:var(--mut)}
+.txt{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;font-size:15px;max-height:340px;overflow:auto}
+/* fenêtres */
+.modal{position:fixed;inset:0;background:color-mix(in srgb,#000 45%,transparent);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.modal.on{display:flex}
+.modal>.box{background:var(--bg);width:100%;max-width:660px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 18px 28px}
+@media(min-width:900px){.modal{align-items:center}.modal>.box{border-radius:18px}.modal.side{justify-content:flex-end;align-items:stretch}.modal.side>.box{max-height:none;height:100%;border-radius:0;max-width:580px}}
+.slips{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:12px 0}
+.slip{border:2px dashed var(--line);border-radius:12px;padding:12px;background:var(--card)}
+.slip p{margin:4px 0}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;max-width:min(92vw,560px);z-index:10;display:none}
+.toast.on{display:block}
+@media(max-width:600px){table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 10px;padding-inline-start:8.5em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut);font-size:13px}.stack td:empty{display:none}.kv{grid-template-columns:1fr}}
+@media print{body>*:not(#modal){display:none!important}#modal{position:static;display:block;background:none}#modal>.box{max-height:none;max-width:none;padding:0}.noprint{display:none!important}.slips{grid-template-columns:repeat(2,1fr)}.slip{break-inside:avoid}}
+
+/* connexion et réglages */
+.login{max-width:420px;margin:8vh auto;padding:0 16px}
+.per{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:var(--bg)}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:0 12px}
+.chk{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px}.chk label{display:flex;gap:8px;align-items:center;font-weight:400;margin:0}
+.sel{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sel select{width:auto;min-width:9em;background:var(--card)}
+.hdr select{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4);min-height:38px;width:auto}
+.hdr select option{color:#17252b}
+.hdr button.lk{background:none;border:0;color:#fff;text-decoration:underline;padding:0}
+
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="hdr"><div class="in"><span class="lg"><span>P<i></i></span>Ma PFMP</span><span class="sp">Espace professeur</span><span class="who" id="who"></span></div></header>
+
+<section class="login" id="login" hidden>
+  <form class="card" id="lgForm" style="padding:22px">
+    <h2>Connexion professeur</h2>
+    <label for="lgId">Identifiant</label><input id="lgId" autocomplete="username" autocapitalize="none" spellcheck="false">
+    <label for="lgMdp">Mot de passe</label><input id="lgMdp" type="password" autocomplete="current-password">
+    <p class="small" id="lgErr" style="color:var(--bad)" role="alert"></p>
+    <button class="btn p" style="width:100%" id="lgBtn">Se connecter</button>
+  </form>
+  <p class="small mut" style="text-align:center"><a href="./">Espace élève</a></p>
+</section>
+
+<main class="wrap" id="app" hidden>
+  <div class="etape"><span></span><span id="fil" style="width:auto;height:auto;background:none;border-radius:0"></span></div>
+  <div class="intro">
+    <div><h1 id="titre"></h1><p class="mut" id="sous"></p></div>
+    <div class="sel"><select id="sCl" aria-label="Classe"></select><select id="sPe" aria-label="PFMP"></select></div>
+  </div>
+
+  <section class="card" id="faire"><h2 id="fTit">À faire maintenant</h2><ul class="af" id="fL"></ul></section>
+
+  <section class="card" id="vue">
+    <div class="row between"><h2>La classe en un coup d'œil</h2><span class="pill" id="phase"></span></div>
+    <div class="leg" id="leg"></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <nav class="tabs" id="tabs" aria-label="Rubriques"></nav>
+
+  <section class="tab" id="t-classe">
+    <div class="tools">
+      <input id="q" type="search" placeholder="Chercher un élève" aria-label="Chercher un élève">
+      <div class="filt" id="filt"></div>
+      <button class="btn" id="tsv">Copier pour un tableur</button>
+    </div>
+    <div class="tw"><table class="stack" id="tClasse"></table></div>
+    <p class="small mut">Démarches : contacts avec une entreprise, personnes de l'entourage, CV préparé, pistes ajoutées (une fois par jour). Alerte orange : aucune démarche depuis plus de 7 jours, ou convention pas déposée 7 jours après l'accord. Alerte rouge : pas de convention acceptée après la date limite.</p>
+  </section>
+
+  <section class="tab" id="t-traiter">
+    <p class="retour"><button class="lk" data-go="classe">← Retour au suivi</button></p>
+    <h2 style="margin-top:16px">Accords à vérifier</h2>
+    <p class="small mut" style="margin:4px 0 0">Les accords déclarés par les élèves s'enregistrent tout seuls : vous n'avez rien à faire, sauf pour ceux-ci (champ à préciser, ou description qui ressemble à un secteur exclu). Si le stage ne convient pas, dites-le maintenant, avant que l'entreprise remplisse la convention.</p>
+    <div class="grid2" id="lDecl"></div>
+    <h2 style="margin-top:20px">Entreprises à valider</h2>
+    <p class="small mut" style="margin:4px 0 0">Entreprises ajoutées par les élèves avec « Autre chose » ou des réponses qui ne disent pas clairement le champ.</p>
+    <div class="grid2" id="lDem"></div>
+  </section>
+
+  <section class="tab" id="t-conv">
+    <h2 style="margin-top:16px">Conventions à déposer</h2>
+    <p class="small mut" style="margin:4px 0 10px">Quand l'élève dépose sa convention et que vous l'acceptez (complète et adaptée), son stage est trouvé : un seul bouton, « Convention déposée ». Une convention incomplète lui est simplement rendue.</p>
+    <div class="tw"><table class="stack" id="tConv"></table></div>
+    <h2 style="margin-top:22px">Stages trouvés</h2>
+    <div class="tw" style="margin-top:10px"><table class="stack" id="tSign"></table></div>
+  </section>
+
+  <section class="tab" id="t-eleves">
+    <div class="row between" style="margin-top:16px"><h2>Élèves et codes de connexion</h2>
+      <div class="row"><button class="btn" id="addEl">Ajouter des élèves</button><button class="btn" id="allCodes">Nouveaux codes pour toute la classe</button><button class="btn p" id="slipsBtn">Fiches à distribuer</button></div></div>
+    <p class="small mut" style="margin:6px 0 12px">Identifiant prénom.nom et code de 6 caractères. Un code n'est affiché qu'au moment où il est créé (il est chiffré sur le serveur) : distribuez la fiche ou notez-le. Un nouveau code remplace l'ancien et déconnecte l'élève.</p>
+    <div class="tw"><table class="stack" id="tCodes"></table></div>
+  </section>
+
+  <section class="tab" id="t-parents">
+    <p class="retour"><button class="lk" data-go="classe">← Retour au suivi</button></p>
+    <h2 style="margin-top:8px">Messages aux parents</h2>
+    <p class="small mut" style="margin:16px 0 0">Ma PFMP n'envoie rien aux parents. Copiez le message, collez-le dans une discussion Pronote, puis marquez-le comme envoyé : la date reste dans le suivi de l'élève, utile pour justifier une situation sans solution.</p>
+    <div class="pgrid"><div id="tpls"></div><div id="msgs"></div></div>
+  </section>
+
+  <section class="tab" id="t-regl"></section>
+</main>
+
+<div class="modal" id="modal"><div class="box" id="mBody"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+const $=s=>document.querySelector(s),E=i=>document.getElementById(i),DAY=864e5;
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const D=s=>{if(!s)return null;const[y,m,d]=String(s).slice(0,10).split('-').map(Number);return new Date(y,m-1,d)};
+const j0=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x};
+const addD=(d,n)=>{const x=j0(d);x.setDate(x.getDate()+n);return x};
+const lundi=d=>{const x=j0(d);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const pl=(n,s,p)=>n+' '+(n>1?(p||s+'s'):s);
+const fmt=d=>d?d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
+const fj=d=>d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+const fd=d=>d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+let today=j0(new Date());
+const depuis=d=>Math.round((today-j0(d))/DAY);
+const ago=n=>n===0?"aujourd'hui":n===1?'hier':`il y a ${n} jours`;
+/* ---------- serveur ---------- */
+/* ---------- adresse du serveur ----------
+   La page peut être servie par le Pi lui-même (recherche-api.ma-pfmp.fr, ou l'adresse de secours en ts.net) : le serveur est alors à la même adresse.
+   Servie par GitHub Pages (comme LABORO), elle essaie l'adresse habituelle (Cloudflare) puis, si le réseau la bloque (lycée), l'adresse de secours (Tailscale), 4 s au plus chacune. */
+const SERVEURS=['https://recherche-api.ma-pfmp.fr/','https://laboro-pi.tail0da51c.ts.net/pfmp/'];
+const SUR_PI=location.hostname==='recherche-api.ma-pfmp.fr'||/\.ts\.net$/.test(location.hostname)||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+let BASE=SUR_PI?'':null,choixBase=null;
+async function joignable(b){const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);try{const r=await fetch(b+'api/referentiel',{signal:c.signal,cache:'no-store'});return r.ok}catch(e){return false}finally{clearTimeout(t)}}
+function trouverBase(force){
+  if(BASE!==null&&!force)return Promise.resolve(BASE);
+  if(choixBase&&!force)return choixBase;
+  choixBase=(async()=>{let s='';try{s=localStorage.getItem('pfmp-serveur')||''}catch(e){}
+    for(const b of [...new Set([s,...SERVEURS].filter(x=>SERVEURS.includes(x)))]){if(await joignable(b)){BASE=b;try{localStorage.setItem('pfmp-serveur',b)}catch(e){}return b}}
+    BASE=null;choixBase=null;throw new Error('Impossible de joindre le serveur. Vérifie ta connexion, puis réessaie.')})();
+  return choixBase}
+const urlApi=async u=>(await trouverBase())+'api'+u;
+let TOK='';try{TOK=localStorage.getItem('pfmp-prof')||''}catch(e){}
+function setTok(t){TOK=t;try{t?localStorage.setItem('pfmp-prof',t):localStorage.removeItem('pfmp-prof')}catch(e){}}
+async function api(m,u,b,encore){
+  let r;try{r=await fetch(await urlApi(u),{method:m,headers:{'Content-Type':'application/json',...(TOK?{Authorization:'Bearer '+TOK}:{})},body:b?JSON.stringify(b):undefined})}
+  catch(e){/* réseau changé en cours de route : on recherche le serveur et on relance une lecture, jamais un enregistrement (pour ne pas l'enregistrer deux fois) */
+    if(!SUR_PI&&m==='GET'&&!encore&&await trouverBase(true).then(()=>true,()=>false))return api(m,u,b,true);
+    throw new Error(e&&/joindre le serveur/.test(e.message)?e.message:'Pas de connexion au serveur.')}
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401&&TOK&&u!=='/connexion'){setTok('');montrerLogin();throw new Error(d.erreur||'Reconnectez-vous.')}
+  if(!r.ok)throw new Error(d.erreur||'Erreur '+r.status);
+  return d;
+}
+async function agir(m,u,b,ok,recharger=true){try{const d=await api(m,u,b);if(d.classes)ME.classes=d.classes;if(recharger)await chargerSuivi();if(ok)toast(ok);return d}catch(e){toast(e.message);return null}}
+/* ---------- référentiel ---------- */
+const CH={C:['Accueil','var(--fC)','var(--fCs)'],A:['Espace commercial (A)','var(--fA)','var(--fAs)'],B:['Prospection (B)','var(--fB)','var(--fBs)'],'?':['Champ à préciser','var(--mut)','var(--line)']};
+const chip=f=>`<span class="chip" style="--f:${(CH[f]||CH['?'])[1]};--fs:${(CH[f]||CH['?'])[2]}">${(CH[f]||CH['?'])[0]}</span>`;
+const STA={nv:['À contacter','nv'],inj:['Injoignable','wa'],rap:['À rappeler','wa'],rdv:['Rendez-vous','ok'],ref:['Refus','no'],acc:['Accord','ok']};
+const ST={rech:['En recherche','nv'],acc:['Convention à déposer','wa'],sign:['Stage trouvé','ok']};
+const Q1={A:"Dans un magasin où le client entre librement",B:"Chez le client, au téléphone, en rendez-vous",C:"À un comptoir, un standard, une réception"};
+const Q2={A:"Mise en rayon, vitrines, encaissement, conseil",B:"Prospection, rendez-vous, devis, relances",C:"Accueil, information, orientation, agenda",X:"Autre chose"};
+const HORS=/(en salle|servir|serveu|repas|en cuisine|restau|brasserie|pizz|snack|kebab|boulang|boucher|traiteur)/i;
+const CONV=["Missions conformes à la formation","Horaires légaux","Nom et téléphone du tuteur","Assurance de l'entreprise : assureur et numéro de contrat","Cachet et signature de l'entreprise","Signature des responsables légaux"];
+const convLab=(i,s)=>i===1?(s.mineur?"Horaires légaux : 35 h par semaine, 8 h par jour, 2 jours de repos consécutifs dont le dimanche":"Horaires légaux : 35 h par semaine, 8 h par jour"):CONV[i];
+const ANNUL=[["L'entreprise s'est désistée","L'entreprise ne peut finalement plus t'accueillir."],["L'élève a renoncé","Tu as renoncé à ce stage."],["Convention impossible à finaliser","La convention n'a pas pu être finalisée avec cette entreprise."],["Autre motif",""]];
+const MOTIFS=[["Missions non conformes à la formation","Les missions proposées ne correspondent pas à ta formation."],["Secteur hors référentiel","Ce secteur ne fait pas partie des entreprises retenues pour ta formation."],["Trajet trop long ou trop compliqué","Le trajet jusqu'à cette entreprise est trop long ou trop compliqué."],["Horaires non conformes à la loi","Les horaires proposés ne respectent pas les règles des stages."],["Autre motif",""]];
+const NIVEAUX=['Seconde','Première','Terminale'];
+/* ---------- état ---------- */
+let ME=null,CL=null,PE=null,DATA=null,S=[],TAB='classe',F='all',Q='',TPL='lanc';
+const NEWCODES=new Map();
+const classe=()=>ME.classes.find(c=>c.id===CL);
+const per=()=>DATA&&DATA.periode;
+let DEP,FIN,OUV,BUT,NIV=0;
+const RLAB=['Démarrage','Recherche','Dernière ligne droite','Date limite dépassée','PFMP commencée'];
+const pal=k=>({k,n:Math.min(k,2)+1+NIV,need:['','c','v','v','v'][k]});
+const R=()=>{const t=today,k=t>=DEP?4:t>=BUT?3:t>=addD(BUT,-28)?2:t<addD(OUV,14)?0:1;return pal(k)};
+const rTxt=r=>`${pl(r.n,'démarche')} par semaine${r.need==='c'?', dont 1 contact avec une entreprise':r.need==='v'?', dont 1 visite sur place':''}`;
+const PERTXT=()=>`du ${fj(DEP)} au ${fj(FIN)}`;
+const CT=['Visite','Appel','Mail'];
+function prep(e){
+  const cib=(e.pistes||[]).map(p=>({...p,ajout:D(p.date),contacts:p.contacts.map(c=>({...c,d:D(c.date)}))}));
+  const su=e.suivi||{statut:'rech'},pa=su.piste_id?cib.find(c=>c.id===su.piste_id):null;
+  const vu=new Set(),dem=[...cib.flatMap(c=>c.contacts.filter(x=>CT.includes(x.type)).map(x=>({d:x.d,t:x.type}))),...(e.entourage||[]).map(x=>({d:D(x.date),t:'ent'})),...(e.journal||[]).map(x=>({d:D(x.date),t:'cv'})),
+    ...cib.filter(c=>{const k=+c.ajout;if(vu.has(k))return false;vu.add(k);return true}).map(c=>({d:c.ajout,t:'piste'}))];
+  return {...e,p:e.prenom,n:e.nom,id:e.id,st:su.statut,su,pa,cib,dem,ent:e.entourage||[]};
+}
+const lastOf=s=>{const L=s.dem.map(x=>+x.d);return L.length?depuis(new Date(Math.max(...L))):null};
+const week=s=>{const L=lundi(today),d=s.dem.filter(x=>x.d>=L&&x.d<=today);return{n:d.length,c:d.filter(x=>CT.includes(x.t)).length,v:d.filter(x=>x.t==='Visite').length}};
+const enCours=s=>s.cib.filter(c=>!c.archive&&!['ref','acc'].includes(c.statut)).length;
+const actives=s=>s.cib.filter(c=>!c.archive).length;
+const alerte=s=>{
+  if(s.st==='sign'||!per())return null;
+  if(today>=DEP)return['rouge',s.st==='rech'?'PFMP commencée, toujours sans stage':'PFMP commencée, convention pas déposée'];
+  if(today>=BUT)return['rouge',s.st==='rech'?'Sans stage après la date limite':'Convention pas déposée à la date limite'];
+  if(s.st==='rech'){if(today<addD(OUV,7))return null;const l=lastOf(s);if(l===null)return['orange',s.derniere_connexion?'Aucune démarche notée':'Jamais connecté'];if(l>7)return['orange',`Aucune démarche depuis ${l} jours`]}
+  if(s.st==='acc'&&s.su.accord_le&&depuis(D(s.su.accord_le))>7)return['orange',`Convention pas déposée (accord ${ago(depuis(D(s.su.accord_le)))})`];
+  return null};
+const horsP=p=>p&&HORS.test(p.nom+' '+(p.quoi||''));
+const aVerif=s=>s.st==='acc'&&!s.su.verifie&&s.pa&&(s.pa.champ==='?'||horsP(s.pa));
+const demandes=s=>s.cib.filter(c=>c.validation==='attente'&&!c.archive&&(!s.pa||c.id!==s.pa.id));
+const aTraiter=s=>aVerif(s)||demandes(s).length>0;
+const prio=s=>{const a=alerte(s);return a&&a[0]==='rouge'?0:a?1:aTraiter(s)?2:3};
+const byName=(a,b)=>(a.n+a.p).localeCompare(b.n+b.p,'fr');
+const byId=id=>S.find(s=>s.id===+id);
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),3800)}
+function copy(t,btn){const ok=()=>{if(btn){const o=btn.textContent;btn.textContent='Copié';setTimeout(()=>btn.textContent=o,2000)}toast('Copié : collez-le où vous voulez.')};
+  try{navigator.clipboard.writeText(t).then(ok,()=>toast('Copie impossible : sélectionnez le texte à la main.'))}catch(e){toast('Copie impossible : sélectionnez le texte à la main.')}}
+function modal(h,side){$('#mBody').innerHTML=h;$('#modal').classList.toggle('side',!!side);$('#modal').classList.add('on')}
+const close=()=>$('#modal').classList.remove('on');
+/* ---------- chargement ---------- */
+async function chargerMoi(){ME=await api('GET','/prof/moi');today=D(ME.aujourdhui);
+  $('#who').innerHTML=`${esc(ME.prof.nom)} · <a href="./">Vue élève</a> · <a href="https://ma-pfmp.fr/" target="_blank" rel="noopener">Ouvrir Ma PFMP ↗</a> · <button class="lk" data-out>Se déconnecter</button>`;
+  let m=null;try{m=JSON.parse(localStorage.getItem('pfmp-prof-sel')||'null')}catch(e){}
+  if(!ME.classes.find(c=>c.id===CL))CL=(m&&ME.classes.find(c=>c.id===m.cl))?m.cl:(ME.classes[0]||{}).id||null;
+  if(PE==null&&m&&m.cl===CL)PE=m.pe}
+async function chargerSuivi(){
+  if(!CL){DATA=null;S=[];render();return}
+  DATA=await api('GET',`/prof/classes/${CL}/suivi${PE?'?periode='+PE:''}`);today=D(DATA.aujourdhui);
+  const p=DATA.periode;PE=p?p.id:null;try{localStorage.setItem('pfmp-prof-sel',JSON.stringify({cl:CL,pe:PE}))}catch(e){}
+  NIV=DATA.classe.niveau>0?1:0;if(p){DEP=D(p.debut);FIN=D(p.fin);OUV=D(p.ouverture);BUT=D(p.butoir)}
+  S=DATA.eleves.map(prep);render();
+}
+/* ---------- en-tête ---------- */
+function head(){
+  const c=classe(),p=per();
+  $('#sCl').innerHTML=ME.classes.length?ME.classes.map(x=>`<option value="${x.id}" ${x.id===CL?'selected':''}>${esc(x.nom)} · ${esc(x.annee)}</option>`).join(''):'<option>Aucune classe</option>';
+  $('#sPe').hidden=!c||c.periodes.length<1;$('#sPe').innerHTML=c?c.periodes.map(x=>`<option value="${x.id}" ${x.id===PE?'selected':''}>${esc(x.nom)}</option>`).join(''):'';
+  $('#vue').hidden=!c||!p||!S.length;faire(c,p);
+  if(!c){$('#fil').textContent='Bienvenue';$('#titre').textContent='Espace professeur';$('#sous').textContent='Quatre étapes pour lancer la recherche de stage de votre classe.';}
+  else if(!p){$('#fil').textContent='Recherche de stage';$('#titre').textContent=`${c.nom} · ${NIVEAUX[c.niveau]}${c.niveau?' option '+c.option:''}`;$('#sous').textContent='Encore quelques étapes avant de lancer la recherche de stage.';}
+  else{
+    const n=k=>S.filter(s=>s.st===k).length,nA=S.filter(alerte).length,nT=S.filter(aTraiter).length,r=R(),J=Math.round((DEP-today)/DAY);
+    $('#fil').textContent=`${c.nom} · ${p.nom} · Recherche de stage`;
+    $('#fil').textContent='Recherche de stage';
+    $('#titre').textContent=`${c.nom} · ${p.nom}`;
+    $('#sous').textContent=`Stage ${PERTXT()} · ${J>0?'départ dans '+pl(J,'jour'):J===0?'départ aujourd\'hui':'PFMP commencée'} · date limite des conventions : ${fd(BUT)}`;
+    const ph=$('#phase');ph.className='pill'+(r.k>=2?' u':'');ph.textContent=`${RLAB[r.k]} · ${rTxt(r)}`;
+    $('#leg').innerHTML=['sign','acc','rech'].map(k=>`<span><i class="${k}"></i>${ST[k][0]} (${n(k)})</span>`).join('')+`<span><i class="ao"></i>Alerte orange</span><span><i class="ar"></i>Alerte rouge</span>`;
+    const ord=['sign','acc','rech'];
+    $('#tiles').innerHTML=S.slice().sort((a,b)=>ord.indexOf(a.st)-ord.indexOf(b.st)||(!!alerte(a))-(!!alerte(b))||byName(a,b)).map(s=>{const a=alerte(s);return `<button class="tile ${s.st}" data-el="${s.id}" aria-label="${esc(s.p+' '+s.n+' : '+ST[s.st][0]+(a?', '+a[1]:''))}"><span class="ini">${esc(s.p[0]+s.n[0])}</span><span class="nm">${esc(s.p)}</span>${a?`<i class="al ${a[0]}"></i>`:''}</button>`}).join('')||'<p class="empty">Aucun élève pour l\'instant : onglet « Élèves et codes ».</p>';
+  }
+  const ok=!!(c&&p),nT=ok?S.filter(aTraiter).length:0,nC=ok?S.filter(s=>s.st==='acc').length:0,nP=ok?TPLS.reduce((t,x)=>t+(x.k==='lanc'?0:x.who().filter(s=>!envoye(s,x.k)).length),0):0;
+  const T=[...(ok?[['classe','Suivi',0],['conv','Conventions',nC]]:[]),...(c?[['eleves','Élèves et codes',0]]:[]),['regl','Réglages',0]];
+  const cache=ok&&['traiter','parents'].includes(TAB);
+  if(!cache&&!T.find(x=>x[0]===TAB))TAB=T[0][0];
+  $('#tabs').innerHTML=T.map(([k,t,b])=>`<button data-tab="${k}" class="${TAB===k?'on':''}">${t}${b?`<b>${b}</b>`:''}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+TAB));
+}
+/* ---------- à faire maintenant ---------- */
+function faire(c,p){
+  const li=(ic,cl,t,d,b)=>`<li class="${cl==='ok'?'fait':''}"><span class="ic ${cl}">${ic}</span><span class="tx"><b>${t}</b>${d?`<span>${d}</span>`:''}</span>${b||''}</li>`;
+  let h='';
+  if(!c||!p||!S.length){
+    $('#fTit').textContent=c?`Pour lancer la ${c.nom}`:'Pour commencer';
+    const e1=!!c,e2=!!p,e3=S.length>0;
+    h=li(e1?'✓':'1',e1?'ok':'',`Créer la classe`,e1?esc(c.nom):'Nom, niveau et année scolaire.',e1?'':'<button class="btn p" data-go="regl">Créer la classe</button>')
+     +li(e2?'✓':'2',e2?'ok':'',`Programmer la PFMP`,e2?`${esc(p.nom)} ${PERTXT()}`:'Dates du stage, ouverture de la recherche et date limite des conventions.',e1&&!e2?'<button class="btn p" data-go="regl">Programmer la PFMP</button>':'')
+     +li(e3?'✓':'3',e3?'ok':'',`Ajouter les élèves`,e3?pl(S.length,'élève'):'Collez la liste Pronote, avec les dates de naissance.',e2&&!e3?'<button class="btn p" data-ajout>Ajouter les élèves</button>':'')
+     +li('4','','Distribuer les codes','Imprimez les fiches de connexion et faites connecter la classe.',e3?'<button class="btn" data-go="eleves">Élèves et codes</button>':'');
+  }else{
+    $('#fTit').textContent='À faire maintenant';
+    const nV=S.filter(aTraiter).length,nC=S.filter(s=>s.st==='acc').length,R_=S.filter(alerte),nR=R_.filter(s=>alerte(s)[0]==='rouge').length,nJ=S.filter(s=>!s.derniere_connexion).length;
+    const nP=TPLS.reduce((t,x)=>t+(x.k==='lanc'?0:x.who().filter(s=>!envoye(s,x.k)).length),0);
+    if(nV)h+=li(nV,'or',pl(nV,'accord à vérifier','accords à vérifier'),"Champ à préciser ou secteur douteux : c'est vous qui décidez.",'<button class="btn p" data-go="traiter">Vérifier</button>');
+    if(nC)h+=li(nC,'',pl(nC,'convention attendue','conventions attendues'),'Quand l\'élève la dépose et qu\'elle est complète : « Convention déposée ».','<button class="btn" data-go="conv">Ouvrir</button>');
+    if(nJ===S.length)h+=li(nJ,'or',`Aucun élève ne s'est encore connecté`,'Distribuez les fiches de connexion et faites connecter la classe en cours.','<button class="btn" data-go="eleves">Élèves et codes</button>');
+    else if(R_.length)h+=li(R_.length,nR?'no':'or',pl(R_.length,'élève à relancer','élèves à relancer'),`${nJ?pl(nJ,'jamais connecté','jamais connectés')+' · ':''}${nR?pl(nR,'en alerte rouge','en alerte rouge'):'sans démarche depuis plus de 7 jours'}`,'<button class="btn" data-gof="alerte">Voir la liste</button>');
+    if(nP&&nJ<S.length)h+=li(nP,'','Messages aux parents à envoyer','Prêts à copier dans Pronote.','<button class="btn" data-go="parents">Préparer</button>');
+    if(!envoye({envois:DATA.envoisClasse||[]},'lanc'))h+=li('✉','','Prévenir les parents du lancement','Un seul message pour toute la classe, à copier dans Pronote.','<button class="btn" data-go="parents">Préparer</button>');
+    if(!h)h=li('✓','ok','Rien à faire aujourd\'hui','Les élèves avancent : jetez un œil au suivi de temps en temps.','');
+  }
+  $('#fL').innerHTML=h;
+}
+/* ---------- la classe ---------- */
+const FILT=[['all','Tous'],['alerte','À relancer'],['traiter','À vérifier'],['rech','En recherche'],['acc','Convention à déposer'],['sign','Stage trouvé']];
+const slug=t=>t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z-]/g,'');
+const match=(s,f)=>f==='all'||(f==='alerte'?!!alerte(s):f==='traiter'?aTraiter(s):s.st===f);
+function classeTab(){
+  $('#filt').innerHTML=FILT.map(([k,t])=>`<button data-f="${k}" class="${F===k?'on':''}">${t} (${S.filter(s=>match(s,k)).length})</button>`).join('');
+  const r=R(),q=slug(Q.replace(/\s+/g,'')),L=S.filter(s=>match(s,F)&&(!q||slug(s.p+s.n).includes(q)||slug(s.n+s.p).includes(q))).sort((a,b)=>prio(a)-prio(b)||byName(a,b));
+  $('#tClasse').innerHTML=`<thead><tr><th>Élève</th><th>Statut</th><th>Entourage</th><th>Pistes</th><th>Cette semaine</th><th>Dernière démarche</th><th>Alerte</th></tr></thead><tbody>`+(L.length?L.map(s=>{const a=alerte(s),w=week(s),l=lastOf(s);return `<tr class="cl" data-el="${s.id}">
+  <td><button class="nb" data-el="${s.id}">${esc(s.n.toUpperCase()+' '+s.p)}</button><span class="small mut d">${esc(s.identifiant)}</span></td>
+  <td><span class="st ${ST[s.st][1]}">${ST[s.st][0]}</span>${s.pa&&s.st!=='rech'?`<span class="small d">${esc(s.pa.nom)}</span>`:''}</td>
+  <td class="num"><span class="${s.ent.length>=5?'okt':''}">${s.ent.length}/5</span></td>
+  <td class="num">${actives(s)} <span class="mut small">· ${enCours(s)} en cours</span></td>
+  <td>${s.st==='rech'?`<span class="${w.n>=r.n?'okt':''}">${w.n}/${r.n} ${r.n>1?'démarches':'démarche'}</span>${r.need==='v'?` · <span class="${w.v>=1?'okt':''}">${w.v}/1 visite</span>`:r.need==='c'?` · <span class="${w.c>=1?'okt':''}">${w.c}/1 contact</span>`:''}`:'<span class="mut">Recherche terminée</span>'}</td>
+  <td class="num">${l===null?'<span class="mut">Aucune</span>':`${fmt(addD(today,-l))} <span class="small mut">${ago(l)}</span>`}</td>
+  <td>${a?`<span class="st ${a[0]==='rouge'?'no':'or'}">${esc(a[1])}</span>`:''}${aTraiter(s)?'<span class="st nv">À vérifier</span>':''}</td></tr>`}).join(''):`<tr><td colspan="7" class="empty">${S.length?'Aucun élève dans ce filtre.':'Aucun élève : ajoutez-les dans l\'onglet « Élèves et codes ».'}</td></tr>`)+'</tbody>';
+}
+/* ---------- à vérifier ---------- */
+function traiter(){
+  const Dl=S.filter(aVerif);
+  $('#lDecl').innerHTML=Dl.length?Dl.map(s=>{const a=s.pa,id=s.id,h=horsP(a);
+    const v=a.q2&&a.q2!=='X'&&a.q1===a.q2?`Réponses cohérentes : ${chip(a.q1)}`:a.q2==='X'?"Missions décrites par l'élève : le champ est à décider.":a.q1?`Réponses partagées entre ${chip(a.q1)} et ${chip(a.q2)} : le champ est à décider.`:'';
+    return `<article class="card"><div class="row between"><h3><button class="nb" data-el="${id}">${esc(s.p+' '+s.n)}</button></h3><span class="small mut">Déclaré ${ago(depuis(D(s.su.accord_le)))} · ${fmt(D(s.su.accord_le))}</span></div>
+    <p class="big2">${esc(a.nom)} <span class="mut" style="font-weight:400">· ${esc(a.ville)}</span></p>
+    <dl class="kv"><dt>Trouvé</dt><dd>${esc(s.su.comment||'—')}</dd>${a.q1?`<dt>Relation client</dt><dd>${Q1[a.q1]}</dd><dt>Missions</dt><dd>${a.q2==='X'?'Autre chose : « '+esc(a.quoi)+' »':Q2[a.q2]}</dd>`:''}<dt>Tuteur</dt><dd>${s.su.tuteur?esc(s.su.tuteur):'<span class="mut">Pas encore indiqué</span>'}</dd></dl>
+    <p class="verd">${v}</p>${h?`<p class="flag">À vérifier : la description ressemble à un secteur exclu des référentiels (restauration, alimentaire).</p>`:''}
+    <label for="ch-${id}">Champ retenu</label><select id="ch-${id}"><option value="">Choisir le champ</option>${['C','A','B'].map(f=>`<option value="${f}" ${a.champ===f?'selected':''}>${CH[f][0]}</option>`).join('')}</select>
+    <div class="row" style="margin-top:10px"><button class="btn p" data-vu="${id}">C'est bon</button><button class="btn" data-no="${id}">Non retenu</button></div>
+    <div id="nr-${id}" hidden><label for="mo-${id}">Motif</label><select id="mo-${id}" data-pv="${id}">${MOTIFS.map((m,i)=>`<option value="${i}" ${h&&i===1?'selected':''}>${m[0]}</option>`).join('')}</select>
+    <label for="co-${id}">Précision pour l'élève (facultatif)</label><textarea id="co-${id}" data-pv="${id}" placeholder="Ex. : viens me voir, je t'aide à trouver une autre entreprise"></textarea>
+    <p class="small"><b>Message que verra l'élève :</b> <span id="pv-${id}"></span></p><button class="btn bad" data-noconf="${id}">Confirmer : stage non retenu</button></div></article>`}).join(''):'<p class="empty">Aucun accord à vérifier pour l\'instant.</p>';
+  Dl.forEach(s=>pv(s.id));
+  const M=S.flatMap(s=>demandes(s).map(d=>[s,d]));
+  $('#lDem').innerHTML=M.length?M.map(([s,d])=>`<article class="card"><div class="row between"><h3><button class="nb" data-el="${s.id}">${esc(s.p+' '+s.n)}</button></h3><span class="small mut">Demandé ${ago(depuis(d.ajout))}</span></div>
+    <p class="big2">${esc(d.nom)} <span class="mut" style="font-weight:400">· ${esc(d.ville)}</span></p>
+    <dl class="kv">${d.q1?`<dt>Relation client</dt><dd>${Q1[d.q1]}</dd>`:''}<dt>Missions</dt><dd>${d.q2==='X'?'« '+esc(d.quoi)+' »':(Q2[d.q2]||'—')}</dd></dl>
+    ${horsP(d)?`<p class="flag">À vérifier : la description ressemble à un secteur exclu des référentiels.</p>`:''}
+    <p class="small mut" style="margin:8px 0 4px">Compatible avec :</p><div class="row">${per().champs.split('').map(f=>`<button class="btn" data-dv="${d.id}|${f}">${CH[f][0]}</button>`).join('')}<button class="btn bad" data-dv="${d.id}|N">Non conforme</button></div></article>`).join(''):'<p class="empty">Aucune entreprise à valider.</p>';
+}
+const FINANNUL=' Tu repasses en recherche : tes autres pistes sont toujours dans Mes pistes.';
+function apv(id){const m=E('am-'+id),c=E('ac-'+id),p=E('ap-'+id);if(!m||!p)return;p.textContent=`${ANNUL[+m.value][1]} ${c.value.trim()}`.replace(/\s+/g,' ').trim()+FINANNUL}
+function pv(id){const m=E('mo-'+id),c=E('co-'+id),p=E('pv-'+id);if(!m||!p)return;p.textContent=`${MOTIFS[+m.value][1]} ${c.value.trim()}`.replace(/\s+/g,' ').trim()+' Continue tes recherches : tes autres pistes sont toujours dans Mes pistes.'}
+/* ---------- conventions ---------- */
+function conv(){
+  const A=S.filter(s=>s.st==='acc').sort((a,b)=>String(a.su.accord_le).localeCompare(String(b.su.accord_le)));
+  $('#tConv').innerHTML=`<thead><tr><th>Élève</th><th>Entreprise</th><th>Accord trouvé</th><th>Situation</th><th></th></tr></thead><tbody>`+(A.length?A.map(s=>{const a=s.pa||{},j=depuis(D(s.su.accord_le));return `<tr><td><button class="nb" data-el="${s.id}">${esc(s.p+' '+s.n)}</button><span class="small mut d">${s.mineur?'Moins de 18 ans':'18 ans ou plus'}</span></td><td>${esc(a.nom||'')}<span class="d">${chip(a.champ)}</span></td><td class="num">${fmt(D(s.su.accord_le))} <span class="small mut">${ago(j)}</span></td>
+    <td>${j>7?`<span class="st or">Pas déposée depuis ${j} jours</span>`:'<span class="st acc">En attente du dépôt</span>'}${aVerif(s)?'<span class="st nv">À vérifier</span>':''}</td>
+    <td><button class="btn p" data-ctrl="${s.id}">Convention déposée</button></td></tr>`}).join(''):'<tr><td colspan="5" class="empty">Aucune convention attendue.</td></tr>')+'</tbody>';
+  const G=S.filter(s=>s.st==='sign').sort((a,b)=>String(a.su.acceptee_le).localeCompare(String(b.su.acceptee_le)));
+  $('#tSign').innerHTML=`<thead><tr><th>Élève</th><th>Entreprise</th><th>Convention acceptée le</th><th>Par</th></tr></thead><tbody>`+(G.length?G.map(s=>`<tr><td><button class="nb" data-el="${s.id}">${esc(s.p+' '+s.n)}</button></td><td>${esc(s.pa?s.pa.nom:'')} ${s.pa?chip(s.pa.champ):''}</td><td class="num">${fmt(D(s.su.acceptee_le))}</td><td>${esc(s.su.acceptee_par||'')}</td></tr>`).join(''):'<tr><td colspan="4" class="empty">Aucun stage trouvé pour l\'instant.</td></tr>')+'</tbody>';
+}
+function ctrl(id){
+  const s=byId(id),a=s.pa||{},I=s.mineur?[0,1,2,3,4,5]:[0,1,2,3,4];
+  modal(`<div class="row between"><h2>Convention de ${esc(s.p+' '+s.n)}</h2><button class="btn" data-close>Fermer</button></div><p class="mut">${esc(a.nom||'')}${a.ville?' · '+esc(a.ville):''} · ${s.mineur?'élève de moins de 18 ans':'élève de 18 ans ou plus'}${s.su.tuteur?' · tuteur : '+esc(s.su.tuteur):''}</p>
+  <p class="small" style="margin-bottom:0"><b>Pour mémoire, une convention complète comporte :</b></p><ul class="small" style="padding-left:18px;margin:4px 0">${I.map(i=>`<li>${esc(convLab(i,s))}</li>`).join('')}</ul>
+  <p class="small mut">S'il manque quelque chose, rendez-la simplement à l'élève : rien à saisir ici.</p>
+  ${a.champ==='?'?`<label for="cF">Champ retenu</label><select id="cF"><option value="">Choisir le champ</option>${['C','A','B'].map(f=>`<option value="${f}">${CH[f][0]}</option>`).join('')}</select>`:''}
+  <label for="cPar">Acceptée par</label><select id="cPar"><option>moi</option><option>le DDFPT</option><option>un collègue</option></select>
+  <label for="cCom">Remarque (facultatif)</label><textarea id="cCom"></textarea>
+  <div class="row" style="margin-top:12px"><button class="btn p" id="cOk">Convention acceptée : stage trouvé</button></div>`);
+  $('#cOk').addEventListener('click',async()=>{const cf=E('cF');if(cf&&!cf.value){toast('Choisissez d\'abord le champ retenu.');cf.focus();return}
+    if(await agir('POST',`/prof/eleves/${s.id}/suivi/${PE}/accepter`,{champ:cf?cf.value:null,par:$('#cPar').value,remarque:$('#cCom').value},`${s.p} a trouvé son stage : son appli affiche « Stage trouvé ».`))close()});
+}
+/* ---------- élèves et codes ---------- */
+function eleves(){
+  $('#slipsBtn').disabled=!NEWCODES.size;
+  $('#tCodes').innerHTML=`<thead><tr><th>Élève</th><th>Identifiant</th><th>Moins de 18 ans</th><th>Dernière connexion</th><th>Code</th><th></th></tr></thead><tbody>`+(S.length?S.slice().sort(byName).map(s=>{const nc=NEWCODES.get(s.id);return `<tr><td>${esc(s.n.toUpperCase()+' '+s.p)}</td><td>${esc(s.identifiant)}</td><td>${s.naissance?`${s.mineur?'Oui':'Non'}<span class="small mut d">né(e) le ${s.naissance.split('-').reverse().join('/')}</span>`:`<input type="checkbox" data-min="${s.id}" ${s.mineur?'checked':''} aria-label="${esc(s.p)} a moins de 18 ans">`}</td><td class="num">${s.derniere_connexion?ago(depuis(new Date(s.derniere_connexion))):'<span class="mut">Jamais</span>'}</td>
+  <td>${nc?`<b class="code">${nc.code}</b><span class="small mut d">Nouveau : à noter</span>`:'<span class="mut">Actif</span>'}</td><td><div class="row"><button class="btn" data-reset="${s.id}">Nouveau code</button><button class="btn" data-arch="${s.id}">Retirer</button></div></td></tr>`}).join(''):'<tr><td colspan="6" class="empty">Aucun élève : « Ajouter des élèves », puis collez la liste depuis Pronote.</td></tr>')+'</tbody>';
+}
+async function voirDoc(id,type){const w=window.open('','_blank');try{const r=await fetch(await urlApi(`/prof/eleves/${id}/documents/${type}`),{headers:TOK?{Authorization:'Bearer '+TOK}:{}});if(!r.ok)throw new Error('Document introuvable.');const u=URL.createObjectURL(await r.blob());if(w)w.location=u;else location.href=u}catch(e){if(w)w.close();toast(e.message)}}
+function confirmer(b,txt){if(b.dataset.ok!=='1'){const o=b.textContent;b.dataset.ok='1';b.textContent=txt;setTimeout(()=>{if(b.isConnected){b.dataset.ok='';b.textContent=o}},4000);return false}return true}
+function slips(){
+  const L=[...NEWCODES.values()].sort((a,b)=>(a.nom+a.prenom).localeCompare(b.nom+b.prenom,'fr'));
+  modal(`<div class="row between noprint"><h2>Fiches de connexion (${L.length})</h2><button class="btn" data-close>Fermer</button></div>
+  <p class="small mut noprint">Une fiche par élève, à découper. Les codes ne sont plus visibles une fois cette page rechargée : imprimez ou copiez maintenant.</p>
+  <div class="row noprint"><button class="btn p" id="prt">Imprimer</button><button class="btn" id="cpl">Copier la liste</button></div>
+  <div class="slips">${L.map(s=>`<div class="slip"><b>Ma PFMP</b> · <span class="small">${esc(location.host)}</span><p style="font-size:18px;font-weight:700">${esc(s.prenom+' '+s.nom)}</p><p>Identifiant : <b>${esc(s.identifiant)}</b></p><p>Code : <b class="code">${s.code}</b></p><p class="small"><b>Garde bien ce code : il te servira aussi pour Ma PFMP pendant ton stage.</b></p><p class="small mut">Garde-le pour toi. Code perdu ? Demande-en un nouveau à ton professeur.</p></div>`).join('')}</div>`);
+  $('#prt').addEventListener('click',()=>{try{window.print()}catch(e){toast("Impression impossible ici : copiez la liste.")}});
+  $('#cpl').addEventListener('click',e=>copy(L.map(s=>`${s.nom.toUpperCase()} ${s.prenom}\t${s.identifiant}\t${s.code}`).join('\n'),e.target));
+}
+function ajout(){
+  modal(`<div class="row between"><h2>Ajouter des élèves</h2><button class="btn" data-close>Fermer</button></div><p class="small">Un élève par ligne : « NOM Prénom », de préférence suivi de la <b>date de naissance</b>, comme dans la liste Pronote. Les autres colonnes (e-mail, régime…) sont ignorées. Avec la date, l'outil sait tout seul si l'élève est mineur au début de chaque PFMP. Un élève déjà dans la classe n'est pas recréé : sa date de naissance est simplement complétée.</p>
+  <label for="aL">Élèves</label><textarea id="aL" style="min-height:180px" placeholder="DUPONT Marie 14/03/2011&#10;MARTIN Karim 02/09/2010"></textarea>
+  <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="aMin" checked> Sans date de naissance : ces élèves ont moins de 18 ans</label>
+  <p class="small" id="aMsg"></p><button class="btn p" id="aOk">Créer les comptes</button>`);
+  $('#aOk').addEventListener('click',async()=>{const cap=w=>w.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());const L=[];
+    $('#aL').value.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const dm=l.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);let naissance=null;
+      if(dm){naissance=`${dm[3]}-${dm[2].padStart(2,'0')}-${dm[1].padStart(2,'0')}`;l=l.slice(0,dm.index).trim()}
+      const w=l.split(/\s+/).filter(Boolean);if(w.length<2)return;let i=0;while(i<w.length-1&&w[i].length>1&&w[i]===w[i].toUpperCase())i++;
+      const up=i>0;L.push({nom:cap((up?w.slice(0,i):w.slice(1)).join(' ')),prenom:cap((up?w.slice(i):w.slice(0,1)).join(' ')),naissance})});
+    if(!L.length){$('#aMsg').textContent='Écrivez au moins un élève, avec son prénom et son nom.';return}
+    $('#aOk').disabled=true;const d=await agir('POST',`/prof/classes/${CL}/eleves`,{eleves:L,mineur:$('#aMin').checked});$('#aOk').disabled=false;
+    if(d){d.crees.forEach(x=>NEWCODES.set(x.id,x));ME=await api('GET','/prof/moi');close();TAB='eleves';await chargerSuivi();
+      const mj=(d.misAJour||[]).length,msg=[d.crees.length?pl(d.crees.length,'compte créé','comptes créés'):'',mj?pl(mj,'date de naissance complétée','dates de naissance complétées'):''].filter(Boolean).join(' · ');
+      toast(msg||'Aucun changement : ces élèves sont déjà dans la classe.');if(d.crees.length)slips()}});
+}
+/* ---------- messages aux parents ---------- */
+const SIG=()=>`${ME.prof.nom}\nProfesseur de la ${classe().nom}\nLycée professionnel Paul Belmondo, Arpajon`;
+const envoye=(s,k)=>(s.envois||[]).find(x=>x.modele===k);
+const TPLS=[
+{k:'lanc',t:'Lancement de la recherche',d:'Un seul message pour toute la classe',who:()=>[],txt:()=>`Madame, Monsieur,\n\nVotre enfant effectuera sa période de formation en milieu professionnel (${per().nom}) ${PERTXT()}. C'est à lui de trouver l'entreprise qui l'accueillera, et la recherche commence dès maintenant.\n\nPour l'aider, la classe utilise Ma PFMP (${location.host}), avec l'identifiant et le code remis en classe. Votre enfant y trouve des idées d'entreprises adaptées à sa formation et y note ses démarches ; je suis son avancée chaque semaine. Il lui est demandé quelques démarches chaque semaine : une au début, puis deux, puis trois pendant les quatre semaines qui précèdent la date limite, dont une visite sur place, CV en main. Quand une entreprise accepte de l'accueillir, il fait remplir la convention de stage et la dépose complète au lycée, si possible avant le ${fj(BUT)}.\n\nVotre aide compte beaucoup : parlez-en autour de vous, de nombreux stages se trouvent grâce à l'entourage.\n\nJe reste à votre disposition par Pronote.\n\n${SIG()}`},
+{k:'orange',t:'Aucune démarche',d:'Élèves en alerte orange',who:()=>S.filter(s=>{const a=alerte(s);return a&&a[0]==='orange'&&s.st==='rech'}),txt:s=>{const l=lastOf(s),q=l===null?(s.derniere_connexion?"n'a noté aucune démarche de recherche de stage dans Ma PFMP":"n'a pas encore utilisé Ma PFMP, l'outil de suivi de la recherche de stage, et n'a noté aucune démarche"):`n'a noté aucune démarche de recherche de stage depuis ${l} jours`;
+  return `Madame, Monsieur,\n\n${s.p} ${q}. Sa PFMP a lieu ${PERTXT()} : il faut trouver une entreprise ${R().k>=2?'rapidement':'à temps'}.\n\nPourriez-vous en parler avec ${s.p} et l'encourager à reprendre ses recherches dès cette semaine ? Il est attendu en ce moment ${rTxt(R())}. Si vous connaissez une entreprise qui pourrait accueillir ${s.p}, n'hésitez pas à le signaler : beaucoup de stages se trouvent grâce à l'entourage.\n\nJe reste à votre disposition par Pronote.\n\n${SIG()}`}},
+{k:'rouge',t:'Sans convention à la date limite',d:'Élèves en alerte rouge',who:()=>S.filter(s=>{const a=alerte(s);return a&&a[0]==='rouge'}),txt:s=>{const nd=s.dem.filter(x=>CT.includes(x.t)).length,J=Math.round((DEP-today)/DAY);
+  return s.st==='rech'?`Madame, Monsieur,\n\n${s.p} n'a pas encore trouvé d'entreprise pour sa PFMP, ${J>0?`qui commence le ${fj(DEP)}, dans ${pl(J,'jour')}`:`qui a commencé le ${fj(DEP)}`}. La date limite pour déposer les conventions (${fj(BUT)}) est passée. Depuis le début de la recherche, ${s.p} a noté ${pl(nd,'contact')} avec des entreprises (${pl(actives(s),'piste')}).\n\nLa situation devient urgente, mais une solution reste possible : des élèves trouvent chaque année, parfois même après le début de la PFMP. Je vous propose que nous fassions le point ensemble rapidement, par Pronote ou lors d'un rendez-vous au lycée.\n\n${SIG()}`
+  :`Madame, Monsieur,\n\nLa convention de stage de ${s.p} (${s.pa?s.pa.nom:''}) n'a pas encore été déposée au lycée, alors que la date limite (${fj(BUT)}) est passée et que sa PFMP commence le ${fj(DEP)}.\n\nLe stage ne peut pas commencer sans convention. Merci de veiller à ce qu'elle soit déposée complète au lycée au plus vite.\n\n${SIG()}`}},
+{k:'acc',t:'Convention à faire remplir',d:'Accord trouvé, élèves mineurs',who:()=>S.filter(s=>s.st==='acc'&&s.mineur),txt:s=>`Madame, Monsieur,\n\n${s.p} a trouvé une entreprise pour sa PFMP : ${s.pa?s.pa.nom:''}${s.pa&&s.pa.ville?', à '+s.pa.ville:''}.\n\nProchaine étape : l'entreprise complète et signe la convention de stage. Comme ${s.p} a moins de 18 ans, elle doit aussi être signée par ses responsables légaux. Merci de veiller à ce qu'elle soit déposée complète au lycée dès que possible : le stage est confirmé quand le lycée l'accepte.\n\n${SIG()}`},
+{k:'sign',t:'Stage trouvé',d:'Conventions acceptées',who:()=>S.filter(s=>s.st==='sign'),txt:s=>`Madame, Monsieur,\n\nLa convention de stage de ${s.p} a été acceptée par le lycée : sa PFMP se déroulera chez ${s.pa?s.pa.nom:''}${s.pa&&s.pa.ville?', à '+s.pa.ville:''}, ${PERTXT()}.\n\nMerci pour votre accompagnement pendant la recherche.\n\n${SIG()}`}];
+function parents(){
+  const lanc=(DATA.envoisClasse||[]).find(x=>x.modele==='lanc');
+  $('#tpls').innerHTML=TPLS.map(x=>{const w=x.who(),ns=w.filter(s=>envoye(s,x.k)).length;return `<button class="tpl ${TPL===x.k?'on':''}" data-tpl="${x.k}"><b>${x.t}</b><span>${x.k==='lanc'?(lanc?'Envoyé le '+fmt(D(lanc.date)):'Pas encore envoyé'):pl(w.length,'élève')+(w.length?` · ${ns} envoyé${ns>1?'s':''}`:'')}</span><span class="d">${x.d}</span></button>`}).join('');
+  const x=TPLS.find(t=>t.k===TPL),card=(id,name,txt,sent)=>`<article class="card" id="m-${TPL}-${id}"><div class="row between"><h3>${name}</h3>${sent?`<span class="st ok">Envoyé le ${fmt(D(sent.date))}</span>`:''}</div><div class="txt">${esc(txt)}</div><div class="row"><button class="btn p" data-cp>Copier le message</button><button class="btn" data-sent="${id}">${sent?'Renvoyé aujourd\'hui':'Marquer comme envoyé'}</button></div></article>`;
+  if(x.k==='lanc'){$('#msgs').innerHTML=card('lanc','À tous les responsables de la '+esc(classe().nom),x.txt(),lanc);return}
+  const w=x.who().sort(byName);
+  $('#msgs').innerHTML=w.length?w.map(s=>card(s.id,'Aux responsables de '+esc(s.p+' '+s.n),x.txt(s),envoye(s,x.k))).join(''):`<p class="empty card">Aucun élève concerné pour l'instant.</p>`;
+}
+/* ---------- réglages ---------- */
+function paliers(p,niv){
+  const O=D(p.ouverture),B=D(p.butoir),Dp=D(p.debut),d=addD(O,14),l=addD(B,-28),n=k=>pl(Math.min(k,2)+1+(niv>0?1:0),'démarche')+' par semaine'+(k===1?', dont 1 contact avec une entreprise':k>=2?', dont 1 visite sur place':'');
+  const L=[[RLAB[0],O,addD(l<d?l:d,-1),0],[RLAB[1],d,addD(l,-1),1],[RLAB[2],l<O?O:l,addD(B,-1),2]].filter((x,i)=>!(i===1&&l<=d)&&!(i===0&&l<=O));
+  return `<ul class="todo">${L.map(([t,a,b,k])=>`<li><span class="dot ${k>=2?'':'ok'}" style="${k>=2?'border-color:var(--bad);color:var(--bad)':''}">${k+1}</span><div><b>${t}</b> <span class="mut">· du ${fd(a)} au ${fd(b)}</span><span class="d small">${n(k)}</span></div></li>`).join('')}
+  <li><span class="dot" style="border-color:var(--bad);color:var(--bad)">!</span><div><b>${RLAB[3]}</b> <span class="mut">· à partir du ${fd(B)}</span><span class="d small">${n(3)} · alerte rouge, la recherche continue</span></div></li>
+  <li><span class="dot" style="border-color:var(--bad);color:var(--bad)">!</span><div><b>${RLAB[4]}</b> <span class="mut">· à partir du ${fd(Dp)}</span><span class="d small">la recherche continue, stage commencé en cours de route</span></div></li></ul>`;
+}
+function formPer(p,c){const k=p?p.id:'new',ch=p?p.champs:(c.niveau?c.option:'CAB');
+  return `<div class="per" data-per="${k}"><div class="g4">
+  <div><label>Nom</label><input data-k="nom" value="${esc(p?p.nom:'PFMP '+(c.niveau*2+c.periodes.length+1))}" placeholder="Ex. : PFMP ${c.niveau*2+1}"></div>
+  <div><label>Début de la PFMP</label><input type="date" data-k="debut" value="${p?p.debut:''}"></div>
+  <div><label>Fin de la PFMP</label><input type="date" data-k="fin" value="${p?p.fin:''}"></div>
+  <div><label>Ouverture de la recherche</label><input type="date" data-k="ouverture" value="${p?p.ouverture:iso(today)}"></div>
+  <div><label>Date limite de dépôt des conventions</label><input type="date" data-k="butoir" value="${p?p.butoir:''}"></div></div>
+  <label>Champs acceptés pour cette PFMP</label><div class="chk">${['C','A','B'].map(f=>`<label><input type="checkbox" data-ch="${f}" ${ch.includes(f)?'checked':''}> ${CH[f][0]}</label>`).join('')}</div>
+  <p class="small mut" style="margin:6px 0 0">C'est la date annoncée aux élèves. Les conventions déposées après restent acceptées, même après le début de la PFMP. ${c.niveau===1?'En première, le référentiel demande au moins une période de 4 semaines dans l\'option choisie.':c.niveau===2?'En terminale, les deux périodes se font dans l\'option, si possible dans la même entreprise (E33).':'En seconde, chaque PFMP peut se faire dans l\'un des trois champs.'}</p>
+  ${p?`<details><summary>Les paliers qui en découlent</summary>${paliers(p,c.niveau)}</details>`:''}
+  <div class="row" style="margin-top:10px"><button class="btn p" data-savep="${k}">${p?'Enregistrer':'Ajouter cette PFMP'}</button>${p?`<button class="btn bad" data-delp="${k}">Supprimer</button>`:''}</div></div>`}
+function regl(){
+  const c=classe();
+  $('#t-regl').innerHTML=(c?`<div class="card"><h2>Classe ${esc(c.nom)}</h2><div class="g4">
+    <div><label for="rNom">Nom</label><input id="rNom" value="${esc(c.nom)}"></div>
+    <div><label for="rNiv">Niveau</label><select id="rNiv">${NIVEAUX.map((n,i)=>`<option value="${i}" ${c.niveau===i?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div id="rOptB" ${c.niveau?'':'hidden'}><label for="rOpt">Option</label><select id="rOpt"><option value="A" ${c.option==='A'?'selected':''}>A · Animation et gestion de l'espace commercial</option><option value="B" ${c.option==='B'?'selected':''}>B · Prospection clientèle et valorisation de l'offre</option></select></div>
+    <div><label for="rAn">Année scolaire</label><input id="rAn" value="${esc(c.annee)}"></div></div>
+    <div class="row" style="margin-top:10px"><button class="btn p" id="rSave">Enregistrer la classe</button><button class="btn" id="rArch">Archiver la classe</button></div></div>
+  <div class="card"><h2>PFMP de la ${esc(c.nom)}</h2><p class="small mut" style="margin:4px 0 0">Une ou plusieurs PFMP dans l'année. Les paliers, les alertes et la vue des élèves suivent la PFMP en cours (ou la prochaine).</p>
+    ${c.periodes.map(p=>formPer(p,c)).join('')}
+    <details ${c.periodes.length?'':'open'}><summary><b>Ajouter une PFMP</b></summary>${formPer(null,c)}</details></div>
+  <div class="card"><h2>Collègues de la classe</h2><p class="small" style="margin:4px 0 8px">${c.profs.map(p=>esc(p.nom)+' <span class="mut">('+esc(p.identifiant)+')</span>').join(', ')}</p>
+    <div class="row"><input id="rCol" placeholder="Adresse académique d'un collègue" style="max-width:320px"><button class="btn" id="rColOk">Partager la classe</button></div></div>`:'')+
+  `<div class="card"><h2>Nouvelle classe</h2><div class="g4">
+    <div><label for="nNom">Nom</label><input id="nNom" placeholder="Ex. : 2MRC1"></div>
+    <div><label for="nNiv">Niveau</label><select id="nNiv">${NIVEAUX.map((n,i)=>`<option value="${i}">${n}</option>`).join('')}</select></div>
+    <div id="nOptB" hidden><label for="nOpt">Option</label><select id="nOpt"><option value="A">A · Espace commercial</option><option value="B">B · Prospection</option></select></div>
+    <div><label for="nAn">Année scolaire</label><input id="nAn" value="${today.getMonth()>=7?today.getFullYear()+'-'+(today.getFullYear()+1):(today.getFullYear()-1)+'-'+today.getFullYear()}"></div></div>
+    <button class="btn p" id="nOk" style="margin-top:10px">Créer la classe</button></div>
+  <div class="card"><h2>Mon compte</h2><div class="g4"><div><label for="mA">Mot de passe actuel</label><input id="mA" type="password" autocomplete="current-password"></div><div><label for="mN">Nouveau mot de passe</label><input id="mN" type="password" autocomplete="new-password" placeholder="10 caractères au moins"></div></div>
+    <button class="btn" id="mOk" style="margin-top:10px">Changer mon mot de passe</button>
+    ${ME.prof.admin?`<h3 style="margin-top:18px">Créer le compte d'un collègue</h3><div class="g4"><div><label for="pI">Identifiant</label><input id="pI" placeholder="prenom.nom@ac-versailles.fr"></div><div><label for="pN">Nom affiché</label><input id="pN" placeholder="Mme Berruelle"></div><div><label for="pM">Mot de passe provisoire</label><input id="pM" placeholder="10 caractères au moins"></div></div><button class="btn" id="pOk" style="margin-top:10px">Créer le compte</button>`:''}</div>`;
+  if(c){
+    E('rNiv').addEventListener('change',e=>{E('rOptB').hidden=e.target.value==='0'});
+    E('rSave').addEventListener('click',()=>agir('PUT','/prof/classes/'+c.id,{nom:E('rNom').value,niveau:+E('rNiv').value,option:E('rOpt').value,annee:E('rAn').value},'Classe enregistrée.'));
+    E('rArch').addEventListener('click',async e=>{if(!confirmer(e.target,'Confirmer : la classe disparaît des listes'))return;if(await agir('PUT','/prof/classes/'+c.id,{archive:true},'Classe archivée.',false)){CL=null;PE=null;await chargerMoi();await chargerSuivi()}});
+    E('rColOk').addEventListener('click',()=>agir('POST',`/prof/classes/${c.id}/profs`,{identifiant:E('rCol').value},'Classe partagée.',false).then(d=>d&&render()));
+  }
+  E('nNiv').addEventListener('change',()=>{E('nOptB').hidden=E('nNiv').value==='0'});
+  E('nOk').addEventListener('click',async()=>{const d=await agir('POST','/prof/classes',{nom:E('nNom').value,niveau:+E('nNiv').value,option:E('nOpt').value,annee:E('nAn').value},'Classe créée : ajoutez maintenant sa PFMP.',false);if(d){CL=d.id;PE=null;TAB='regl';await chargerSuivi()}});
+  E('mOk').addEventListener('click',async()=>{if(await agir('PUT','/prof/mdp',{ancien:E('mA').value,nouveau:E('mN').value},'Mot de passe changé.',false)){E('mA').value='';E('mN').value=''}});
+  if(E('pOk'))E('pOk').addEventListener('click',async()=>{if(await agir('POST','/prof/profs',{identifiant:E('pI').value,nom:E('pN').value,mdp:E('pM').value},'Compte créé : donnez l\'identifiant et le mot de passe provisoire à votre collègue.',false)){E('pI').value='';E('pN').value='';E('pM').value=''}});
+}
+/* ---------- fiche élève ---------- */
+function fiche(id){
+  const s=byId(id),a=s.pa,al=alerte(s),w=week(s),r=R();
+  const ob=[["Parler de son stage à 5 personnes de l'entourage",s.ent.length,5],[`Avoir au moins ${NIV?10:8} pistes`,actives(s),NIV?10:8],["Garder au moins 5 pistes qui n'ont pas dit non",enCours(s),5],[`${pl(r.n,'démarche')} cette semaine`,w.n,r.n],...(r.need==='v'?[["1 visite sur place cette semaine",w.v,1]]:r.need==='c'?[["1 contact avec une entreprise cette semaine",w.c,1]]:[])];
+  const hist=c=>c.contacts.map(x=>`<li><b>${fmt(x.d)} · ${esc(x.type)} · ${(STA[x.resultat]||['',''])[0]}</b><br>${esc(x.texte)}</li>`).join('');
+  modal(`<div class="row between"><h2>${esc(s.p+' '+s.n)}</h2><button class="btn" data-close>Fermer</button></div>
+  <p class="small mut" style="margin:6px 0">${esc(s.identifiant)}${s.ville?' · part de '+esc(s.ville):''} · ${s.mineur?'moins de 18 ans':'18 ans ou plus'} · ${s.derniere_connexion?'dernière connexion '+ago(depuis(new Date(s.derniere_connexion))):'jamais connecté'}</p>
+  <div><span class="st ${ST[s.st][1]}">${ST[s.st][0]}</span>${al?`<span class="st ${al[0]==='rouge'?'no':'or'}">${esc(al[1])}</span>`:''}</div>
+  ${s.su.refus&&s.st==='rech'?`<div class="card"><b>${s.su.refus.annule?'Accord annulé':'Stage non retenu'} : ${esc(s.su.refus.nom)}</b><p class="small" style="margin:4px 0 0">${esc(s.su.refus.message)}</p></div>`:''}
+  ${a&&s.st!=='rech'?`<div class="card"><div class="row between"><h3>${esc(a.nom)}</h3>${chip(a.champ)}</div><p class="small mut" style="margin:4px 0">${esc(a.ville)} · accord déclaré le ${fmt(D(s.su.accord_le))}${s.su.tuteur?' · tuteur : '+esc(s.su.tuteur):''}</p>
+    ${s.st==='acc'?`<div class="row"><button class="btn p" data-ctrl="${s.id}">Convention déposée</button>${aVerif(s)?'<button class="btn" data-go="traiter">Vérifier l\'accord</button>':''}</div>`:`<p class="small okt" style="margin:0 0 8px">Convention acceptée le ${fmt(D(s.su.acceptee_le))} par ${esc(s.su.acceptee_par)}</p><button class="btn" data-rouvrir="${s.id}">Revenir à « convention à déposer »</button>`}
+    <p style="margin:10px 0 0"><button class="btn bad" data-annul="${s.id}">L'accord est annulé…</button></p>
+    <div id="an-${s.id}" hidden><p class="small" style="margin:10px 0 0">L'élève repasse en recherche. L'entreprise reste dans ses pistes, marquée « Refus », et ses démarches restent dans son historique.</p>
+    <label for="am-${s.id}">Motif</label><select id="am-${s.id}" data-apv="${s.id}">${ANNUL.map((m,i)=>`<option value="${i}">${m[0]}</option>`).join('')}</select>
+    <label for="ac-${s.id}">Précision pour l'élève (facultatif)</label><textarea id="ac-${s.id}" data-apv="${s.id}" placeholder="Ex. : viens me voir, on cherche ensemble"></textarea>
+    <p class="small"><b>Message que verra l'élève :</b> <span id="ap-${s.id}">${esc(ANNUL[0][1]+FINANNUL)}</span></p><button class="btn bad" data-annulok="${s.id}">Confirmer l'annulation</button></div></div>`:''}
+  ${s.st==='rech'?`<h3 style="margin-top:14px">Objectifs · ${RLAB[r.k].toLowerCase()}</h3><ul class="todo">${ob.map(([t,n,m])=>`<li><span class="dot ${n>=m?'ok':''}">${n>=m?'✓':''}</span><span style="flex:1">${t}</span><b class="num">${Math.min(n,m)} / ${m}</b></li>`).join('')}</ul>`:''}
+  <h3 style="margin-top:14px">Entourage (${s.ent.length})</h3>${s.ent.length?`<ul class="log">${s.ent.map(e=>`<li><b>${esc(e.lien)}</b> · ${esc(e.reponse)} <span class="mut">· ${fmt(D(e.date))}</span></li>`).join('')}</ul>`:'<p class="empty">Personne de noté pour l\'instant.</p>'}
+  <h3 style="margin-top:14px">Pistes (${s.cib.length})</h3>${s.cib.length?s.cib.map(c=>`<details><summary>${chip(c.champ)} <b>${esc(c.nom)}</b> <span class="st ${STA[c.statut][1]}">${STA[c.statut][0]}</span>${c.archive?'<span class="small mut">abandonnée</span>':''}<span class="small mut">${pl(c.contacts.length,'démarche')} · ajoutée le ${fmt(c.ajout)}</span></summary>${c.contacts.length?`<ul class="log">${hist(c)}</ul>`:'<p class="small mut">Pas encore contactée.</p>'}</details>`).join(''):'<p class="empty">Aucune piste pour l\'instant.</p>'}
+  <h3 style="margin-top:14px">CV et lettre</h3>${(s.documents||[]).length?`<div class="row">${s.documents.map(d=>`<button class="btn" data-doc="${s.id}:${d.type}">${d.type==='cv'?'Voir son CV':'Voir sa lettre'}</button><span class="small mut">${esc(d.nom)} · ${fmt(D(d.date))}</span>`).join('')}</div>`:'<p class="empty">Rien d\'importé pour l\'instant (un CV créé avec l\'outil CV reste sur son appareil).</p>'}
+  ${(s.journal||[]).length?`<p class="small mut">CV ou lettre préparés : ${s.journal.map(j=>fmt(D(j.date))).join(', ')}</p>`:''}
+  <h3 style="margin-top:14px">Suivi du professeur</h3>${(s.notes||[]).length?`<ul class="log">${s.notes.map(l=>`<li><b>${fmt(D(l.date))}</b> · ${esc(l.texte)}</li>`).join('')}</ul>`:'<p class="empty">Rien pour l\'instant.</p>'}
+  <div class="row" style="margin-top:14px"><button class="btn" data-par="${s.id}">Message aux parents</button><button class="btn" data-reset="${s.id}">Nouveau code</button></div>`,true);
+}
+/* ---------- rendu ---------- */
+function render(){if(!ME)return;head();const f={classe:classeTab,traiter,conv,eleves,parents,regl}[TAB];if(f)f()}
+function montrerLogin(){ME=null;$('#app').hidden=true;$('#login').hidden=false;$('#who').innerHTML='';close()}
+async function demarrer(){try{await chargerMoi();$('#login').hidden=true;$('#app').hidden=false;await chargerSuivi()}catch(e){if(!TOK)montrerLogin();else toast(e.message)}}
+$('#lgForm').addEventListener('submit',async e=>{e.preventDefault();$('#lgErr').textContent='';$('#lgBtn').disabled=true;
+  try{const d=await api('POST','/connexion',{identifiant:$('#lgId').value.trim(),secret:$('#lgMdp').value});if(d.role!=='prof'){$('#lgErr').textContent='Ce compte est un compte élève : utilisez l\'espace élève.';return}setTok(d.token);$('#lgMdp').value='';await demarrer()}
+  catch(err){$('#lgErr').textContent=err.message}finally{$('#lgBtn').disabled=false}});
+$('#sCl').addEventListener('change',e=>{CL=+e.target.value;PE=null;F='all';chargerSuivi().catch(err=>toast(err.message))});
+$('#sPe').addEventListener('change',e=>{PE=+e.target.value;chargerSuivi().catch(err=>toast(err.message))});
+$('#q').addEventListener('input',e=>{Q=e.target.value;classeTab()});
+$('#tsv').addEventListener('click',e=>{const H=['Élève','Identifiant','Statut','Entreprise','Entourage','Pistes','En cours','Démarches semaine','Visites semaine','Dernière démarche','Alerte'];
+  copy([H,...S.slice().sort(byName).map(s=>{const w=week(s),l=lastOf(s),a=alerte(s);return[s.n.toUpperCase()+' '+s.p,s.identifiant,ST[s.st][0],s.pa&&s.st!=='rech'?s.pa.nom:'',s.ent.length,actives(s),enCours(s),w.n,w.v,l===null?'':fmt(addD(today,-l)),a?a[1]:'']})].map(r=>r.join('\t')).join('\n'),e.target)});
+$('#addEl').addEventListener('click',ajout);$('#slipsBtn').addEventListener('click',slips);
+$('#allCodes').addEventListener('click',async e=>{if(!confirmer(e.target,'Confirmer : tous les anciens codes ne marcheront plus'))return;let k=0;for(const s of S){try{const d=await api('POST',`/prof/eleves/${s.id}/code`);NEWCODES.set(s.id,d);k++}catch(err){toast(err.message);break}}await chargerSuivi();if(k)slips()});
+document.addEventListener('input',e=>{const t=e.target.closest('[data-pv]');if(t)pv(t.dataset.pv)});
+document.addEventListener('input',e=>{const t=e.target.closest('[data-apv]');if(t)apv(t.dataset.apv)});
+document.addEventListener('change',e=>{const t=e.target.closest('[data-apv]');if(t)apv(t.dataset.apv)});
+document.addEventListener('change',async e=>{const t=e.target.closest('[data-pv]');if(t)pv(t.dataset.pv);const m=e.target.closest('[data-min]');if(m)agir('PUT','/prof/eleves/'+m.dataset.min,{mineur:m.checked},'Enregistré.')});
+document.addEventListener('click',async e=>{
+  const g=a=>e.target.closest(`[${a}]`);let t;
+  if(t=g('data-close')){close();return}
+  if(t=g('data-out')){api('POST','/deconnexion').catch(()=>{});setTok('');montrerLogin();return}
+  if(t=g('data-tab')){TAB=t.dataset.tab;render();return}
+  if(t=g('data-go')){TAB=t.dataset.go;close();render();window.scrollTo({top:$('#tabs').offsetTop-70});return}
+  if(t=g('data-f')){F=t.dataset.f;classeTab();return}
+  if(t=g('data-gof')){TAB='classe';F=t.dataset.gof;render();window.scrollTo({top:$('#tabs').offsetTop-70});return}
+  if(t=g('data-ajout')){ajout();return}
+  if(t=g('data-ctrl')){ctrl(t.dataset.ctrl);return}
+  if(t=g('data-vu')){const s=byId(t.dataset.vu),f=E('ch-'+s.id).value;if(!f){toast('Choisissez d\'abord le champ retenu.');E('ch-'+s.id).focus();return}
+    agir('POST',`/prof/eleves/${s.id}/suivi/${PE}/verifier`,{champ:f},`Accord de ${s.p} vérifié : il attend maintenant le dépôt de sa convention.`);return}
+  if(t=g('data-doc')){const [i,ty]=t.dataset.doc.split(':');voirDoc(i,ty);return}
+  if(t=g('data-annul')){const d=E('an-'+t.dataset.annul);d.hidden=!d.hidden;return}
+  if(t=g('data-annulok')){if(!confirmer(t,'Touche encore pour confirmer'))return;const s=byId(t.dataset.annulok);if(await agir('POST',`/prof/eleves/${s.id}/suivi/${PE}/refuser`,{annule:true,motif:ANNUL[+E('am-'+s.id).value][0],message:E('ap-'+s.id).textContent},`Accord annulé : ${s.p} est de nouveau en recherche.`))close();return}
+  if(t=g('data-no')){const d=E('nr-'+t.dataset.no);d.hidden=!d.hidden;return}
+  if(t=g('data-noconf')){const s=byId(t.dataset.noconf);agir('POST',`/prof/eleves/${s.id}/suivi/${PE}/refuser`,{motif:MOTIFS[+E('mo-'+s.id).value][0],message:E('pv-'+s.id).textContent},`${s.p} est de nouveau en recherche et voit le motif dans son appli.`);return}
+  if(t=g('data-rouvrir')){if(!confirmer(t,'Confirmer'))return;const s=byId(t.dataset.rouvrir);if(await agir('POST',`/prof/eleves/${s.id}/suivi/${PE}/rouvrir`,{},'Retour à « convention à déposer ».'))close();return}
+  if(t=g('data-dv')){const [id,f]=t.dataset.dv.split('|');agir('POST',`/prof/pistes/${id}/valider`,{champ:f},f==='N'?'L\'élève voit que l\'entreprise n\'est pas retenue.':'Entreprise ajoutée aux pistes de l\'élève.');return}
+  if(t=g('data-reset')){if(!confirmer(t,'Confirmer (l\'ancien code ne marchera plus)'))return;try{const d=await api('POST',`/prof/eleves/${t.dataset.reset}/code`);NEWCODES.set(d.id,d);close();await chargerSuivi();toast(`Nouveau code de ${d.prenom} : ${d.code}`)}catch(err){toast(err.message)}return}
+  if(t=g('data-arch')){if(!confirmer(t,'Confirmer'))return;agir('PUT','/prof/eleves/'+t.dataset.arch,{archive:true},'Élève retiré de la classe.');return}
+  if(t=g('data-tpl')){TPL=t.dataset.tpl;parents();return}
+  if(t=g('data-cp')){copy(t.closest('article').querySelector('.txt').textContent,t);return}
+  if(t=g('data-sent')){const id=t.dataset.sent,x=TPLS.find(y=>y.k===TPL);agir('POST','/prof/envois',{periode_id:PE,eleve_id:id==='lanc'?null:+id,modele:TPL,titre:x.t},'Envoi noté dans le suivi.');return}
+  if(t=g('data-par')){const s=byId(t.dataset.par),a=alerte(s);TPL=a&&a[0]==='rouge'?'rouge':a&&s.st==='rech'?'orange':s.st==='acc'&&s.mineur?'acc':s.st==='sign'?'sign':'lanc';TAB='parents';close();render();const c=E(`m-${TPL}-${s.id}`);(c||$('#tabs')).scrollIntoView({behavior:'smooth',block:'start'});return}
+  if(t=g('data-savep')){const k=t.dataset.savep,box=t.closest('[data-per]'),b={champs:''};box.querySelectorAll('[data-k]').forEach(i=>b[i.dataset.k]=i.value);box.querySelectorAll('[data-ch]').forEach(i=>{if(i.checked)b.champs+=i.dataset.ch});
+    const d=await agir(k==='new'?'POST':'PUT',k==='new'?`/prof/classes/${CL}/periodes`:`/prof/periodes/${k}`,b,k==='new'?'PFMP ajoutée.':'PFMP enregistrée.',false);if(d){if(k==='new')PE=null;await chargerSuivi()}return}
+  if(t=g('data-delp')){if(!confirmer(t,'Confirmer la suppression'))return;const d=await agir('DELETE','/prof/periodes/'+t.dataset.delp,null,'PFMP supprimée.',false);if(d){PE=null;await chargerSuivi()}return}
+  if(t=g('data-el')){fiche(t.dataset.el);return}
+});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+if(TOK)demarrer();else montrerLogin();
+}
+</script>
+</body>
+</html>

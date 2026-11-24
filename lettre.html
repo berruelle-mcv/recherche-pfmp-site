@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma lettre de motivation</title>
+<style>
+  /* Même allure que le générateur de CV : panneau de choix à gauche, lettre A4 à droite (dessous sur téléphone) */
+  :root {
+    --ink:#1c2a52; --ink-soft:#4a5568; --line:#d4d9e0; --line-soft:#e8ebef;
+    --paper:#ffffff; --bg:#eceef1; --accent:#2d4a8a; --accent-soft:#e9eef7;
+    --ok:#2e7d4f; --warn-bg:#fdf3e7; --warn-ink:#8a5a16; --warn-line:#e8c98a;
+    --display:"Georgia","Times New Roman",serif; --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  * { box-sizing:border-box; min-width:0; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.5; }
+  .wrap { display:grid; grid-template-columns:minmax(340px,480px) 1fr; min-height:100vh; }
+  @media (max-width:920px){ .wrap{ grid-template-columns:1fr; } }
+  .panel { background:var(--paper); border-right:1px solid var(--line); padding:0 0 32px; overflow-y:auto; max-height:100vh; }
+  @media (max-width:920px){ .panel{ max-height:none; border-right:none; border-bottom:1px solid var(--line); } }
+  .panel-head { padding:20px 24px 14px; border-bottom:1px solid var(--line-soft); }
+  .panel-head h1 { font-family:var(--display); font-size:21px; margin:0 0 3px; }
+  .panel-head p { margin:0; color:var(--ink-soft); font-size:13px; }
+  fieldset { border:none; margin:0; padding:16px 24px 0; }
+  legend { font-family:var(--display); font-size:16px; padding:0; margin-bottom:2px; }
+  .hint { font-size:12.5px; color:var(--ink-soft); margin:4px 0 0; }
+  label.l { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
+  input, select, textarea { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:6px; font-family:var(--body); font-size:16px; color:var(--ink); background:#fff; }
+  textarea { min-height:72px; resize:vertical; }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--accent-soft); border-color:var(--accent); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  @media (max-width:480px){ .row{ grid-template-columns:1fr; } }
+  .seg { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .seg button { flex:1; min-height:44px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:#fff; cursor:pointer; font-size:14px; font-weight:600; }
+  .seg button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .opt { display:flex; gap:9px; align-items:flex-start; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-top:8px; cursor:pointer; font-size:14px; }
+  .opt input { width:auto; margin:3px 0 0; accent-color:var(--accent); flex:none; }
+  .opt:has(input:checked) { border-color:var(--accent); background:var(--accent-soft); }
+  .bank { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chip { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); border-radius:20px; padding:8px 13px; font-size:13.5px; cursor:pointer; background:#fff; user-select:none; min-height:40px; }
+  .chip input { width:auto; margin:0; accent-color:var(--accent); }
+  .chip:has(input:checked) { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600; }
+  .check { margin-top:8px; padding:7px 10px; border-radius:6px; font-size:12.5px; background:var(--warn-bg); color:var(--warn-ink); border:1px solid var(--warn-line); }
+  .check[hidden] { display:none; }
+  .from-cv { margin:12px 24px 0; padding:8px 11px; border-radius:6px; font-size:12.5px; background:#e7f4ec; color:var(--ok); border:1px solid #b6dcc4; }
+  .from-cv[hidden] { display:none; }
+  .preview-area { padding:24px; overflow-y:auto; max-height:100vh; }
+  @media (max-width:920px){ .preview-area{ max-height:none; } }
+  @media (max-width:600px){ .preview-area{ padding:14px 12px; } }
+  .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .toolbar button { min-height:42px; padding:9px 16px; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; border:1px solid var(--line); background:#fff; color:var(--ink); }
+  .toolbar .print { background:var(--ok); color:#fff; border-color:var(--ok); }
+  .toolbar .msg { font-size:13px; color:var(--ok); }
+  .sheet-scroll { overflow:hidden; }
+  .sheet { background:#fff; width:210mm; min-height:297mm; padding:22mm 22mm; box-shadow:0 4px 24px rgba(26,35,50,.14); transform-origin:top left; margin:0 auto; font-size:14.5px; line-height:1.6; color:#1a1f2b; }
+  .sheet .exp { margin:0 0 14mm; }
+  .sheet .exp b { font-size:16px; }
+  .sheet .dest { margin:0 0 10mm 95mm; }
+  .sheet .lieu { margin:0 0 10mm 95mm; }
+  .sheet .obj { margin:0 0 8mm; }
+  .sheet p { margin:0 0 4mm; }
+  .sheet .sign { margin-top:10mm; margin-left:95mm; }
+  @media (max-width:600px){ .sheet .dest,.sheet .lieu,.sheet .sign{ margin-left:80mm; } }
+  .vide { color:#a0a8b8; font-style:italic; }
+  @media print {
+    body { background:#fff; }
+    .panel, .toolbar { display:none !important; }
+    .wrap { display:block; }
+    .preview-area { padding:0; max-height:none; overflow:visible; }
+    .sheet-scroll { height:auto !important; overflow:visible; }
+    .sheet { box-shadow:none; width:auto; min-height:auto; transform:none !important; margin:0; }
+    @page { margin:0; size:A4; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <form class="panel" id="form" autocomplete="off" onsubmit="return false">
+    <div class="panel-head">
+      <h1>Ma lettre de motivation</h1>
+      <p>Choisis dans les listes : ta lettre s'écrit toute seule, courte et sans fautes.</p>
+    </div>
+    <p class="from-cv" id="fromCv" hidden>Tes coordonnées et ta classe ont été reprises de ton CV.</p>
+    <p class="from-cv" id="fromCible" hidden></p>
+
+    <fieldset>
+      <legend>Je signe</legend>
+      <div class="seg" id="genre"><button type="button" data-g="f">au féminin</button><button type="button" data-g="m">au masculin</button></div>
+      <p class="hint">Pour que la lettre s'accorde : « motivée » ou « motivé ».</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Moi</legend>
+      <div class="row">
+        <div><label class="l" for="prenom">Prénom</label><input id="prenom" data-k="prenom"></div>
+        <div><label class="l" for="nom">Nom</label><input id="nom" data-k="nom"></div>
+      </div>
+      <div class="row">
+        <div><label class="l" for="tel">Téléphone</label><input id="tel" data-k="tel" inputmode="tel" placeholder="06 12 34 56 78"></div>
+        <div><label class="l" for="email">E-mail</label><input id="email" data-k="email" inputmode="email"></div>
+      </div>
+      <label class="l" for="ville">Ma ville</label><input id="ville" data-k="ville" placeholder="Arpajon">
+      <label class="l" for="classe">Ma classe</label><select id="classe" data-k="classe"></select>
+    </fieldset>
+
+    <fieldset>
+      <legend>L'entreprise</legend>
+      <label class="l" for="entreprise">Nom de l'entreprise</label><input id="entreprise" data-k="entreprise" placeholder="Hôtel des Tilleuls">
+      <label class="l" for="contact">À l'attention de <span style="font-weight:400;color:var(--ink-soft)">(facultatif)</span></label><input id="contact" data-k="contact" placeholder="Ex. : la responsable de la réception">
+      <div class="row">
+        <div><label class="l" for="debut">Début du stage</label><input id="debut" data-k="debut" type="date"></div>
+        <div><label class="l" for="fin">Fin du stage</label><input id="fin" data-k="fin" type="date"></div>
+      </div>
+      <label class="l">Le champ de mon stage</label>
+      <div class="seg" id="champ"><button type="button" data-c="C">Accueil</button><button type="button" data-c="A">Espace commercial (A)</button><button type="button" data-c="B">Prospection (B)</button></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pourquoi cette entreprise ?</legend>
+      <p class="hint">« Votre entreprise m'intéresse parce que… » Choisis la raison la plus vraie pour toi.</p>
+      <div id="raisons"></div>
+      <textarea id="raisonPerso" data-k="raisonPerso" placeholder="Complète la phrase : « … parce que » (ex. : j'y fais mes courses et j'apprécie l'accueil des vendeurs)" style="margin-top:8px;display:none"></textarea>
+      <div class="check" id="checkRaison" hidden></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Ce que je veux découvrir</legend>
+      <div id="decouvrir"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Mes qualités</legend>
+      <p class="hint">Coche 2 ou 3 qualités. La lettre les illustre avec une phrase.</p>
+      <div class="bank" id="qualites"></div>
+      <div class="check" id="checkQual" hidden></div>
+    </fieldset>
+  </form>
+
+  <div class="preview-area">
+    <div class="toolbar">
+      <button type="button" class="print" id="printBtn">Imprimer / PDF</button>
+      <button type="button" id="copyBtn">Copier le texte pour un mail</button>
+      <button type="button" id="resetBtn">Effacer ma lettre</button>
+      <span class="msg" id="msg"></span>
+    </div>
+    <div class="sheet-scroll"><div class="sheet" id="sheet"></div></div>
+    <p class="hint" style="text-align:center;margin-top:10px">Ta lettre est enregistrée automatiquement sur cet appareil.</p>
+  </div>
+</div>
+
+<script>
+{
+/* ============ CONTENUS (modifiables) ============ */
+const LYCEE = "lycée Paul Belmondo d'Arpajon";
+const CLASSES = [
+  ["2nde Famille des métiers de la relation client (FMRC)", "en seconde Bac Pro Métiers de la relation client"],
+  ["1re Bac Pro MCV — option A (Animation et gestion de l'espace commercial)", "en première Bac Pro Métiers du commerce et de la vente, option Animation et gestion de l'espace commercial"],
+  ["1re Bac Pro MCV — option B (Prospection clientèle et valorisation de l'offre commerciale)", "en première Bac Pro Métiers du commerce et de la vente, option Prospection clientèle et valorisation de l'offre commerciale"],
+  ["Terminale Bac Pro MCV — option A (Animation et gestion de l'espace commercial)", "en terminale Bac Pro Métiers du commerce et de la vente, option Animation et gestion de l'espace commercial"],
+  ["Terminale Bac Pro MCV — option B (Prospection clientèle et valorisation de l'offre commerciale)", "en terminale Bac Pro Métiers du commerce et de la vente, option Prospection clientèle et valorisation de l'offre commerciale"],
+  ["1re Bac Pro Métiers de l'accueil", "en première Bac Pro Métiers de l'accueil"],
+  ["Terminale Bac Pro Métiers de l'accueil", "en terminale Bac Pro Métiers de l'accueil"]
+];
+/* raisons : la suite de « Votre entreprise m'intéresse parce que… » */
+const RAISONS = [
+  "l'accueil et la relation avec les clients y tiennent une place essentielle",
+  "je la connais en tant que client et j'apprécie la qualité de son service",
+  "son secteur d'activité m'attire et correspond à mon projet",
+  "elle accueille une clientèle variée, ce qui me permettra d'apprendre beaucoup",
+  "elle a une bonne réputation dans notre ville",
+  "elle est proche de chez moi, ce qui me permettra d'être toujours à l'heure",
+  "une personne de mon entourage me l'a recommandée",
+  "j'ai été bien reçu·e lors de ma visite et l'équipe m'a donné envie d'y travailler"
+];
+const DECOUVRIR = {
+  C:["l'accueil des clients ou des visiteurs, le renseignement et l'orientation","l'accueil physique et téléphonique, la prise de rendez-vous et la gestion des demandes","l'accueil à la réception, la gestion des réservations et le renseignement au téléphone"],
+  A:["la vie d'un point de vente : la mise en rayon, la mise en valeur des produits et le conseil aux clients","l'accueil et le conseil des clients, l'encaissement et la tenue du magasin","la réception des marchandises, le réassort et l'animation de l'espace de vente"],
+  B:["la recherche de nouveaux clients, la prise de rendez-vous et la vente","le travail d'une équipe commerciale : la prospection, les relances et le suivi des clients","la présentation des offres aux clients et la préparation des rendez-vous"]
+};
+/* qualités : [féminin, masculin, phrase qui l'illustre] */
+const QUALITES = [
+  ["ponctuelle","ponctuel","je respecte toujours mes horaires"],
+  ["souriante","souriant","j'aime mettre les gens à l'aise"],
+  ["sérieuse","sérieux","je fais les choses avec soin jusqu'au bout"],
+  ["motivée","motivé","j'ai vraiment envie d'apprendre ce métier"],
+  ["à l'écoute","à l'écoute","je prends le temps de comprendre ce qu'on me demande"],
+  ["dynamique","dynamique","j'aime être active","j'aime être actif"],
+  ["organisée","organisé","je sais gérer plusieurs tâches"],
+  ["polie","poli","je reste courtoise en toutes circonstances","je reste courtois en toutes circonstances"],
+  ["curieuse","curieux","je pose des questions pour progresser"],
+  ["calme","calme","je garde mon calme face aux demandes"]
+];
+const SALUT = {f:"Je serais heureuse de vous rencontrer pour vous présenter ma motivation.", m:"Je serais heureux de vous rencontrer pour vous présenter ma motivation."};
+
+/* ============ ÉTAT ============ */
+const CLE = "lettre-pfmp-belmondo-v1";
+const d = { genre:"", prenom:"", nom:"", tel:"", email:"", ville:"", classe:CLASSES[0][0], entreprise:"", contact:"", debut:"2027-01-18", fin:"2027-02-05", champ:"C", raison:-1, raisonPerso:"", decouvrir:0, qualites:[] };
+const $ = s => document.querySelector(s);
+try { const s = JSON.parse(localStorage.getItem(CLE) || "null"); if (s) Object.keys(d).forEach(k => { if (s[k] !== undefined) d[k] = s[k]; }); } catch (e) {}
+/* coordonnées reprises du CV, seulement pour les champs encore vides */
+try {
+  const cv = JSON.parse(localStorage.getItem("cv-pfmp-belmondo-v1") || "null");
+  if (cv && cv.data) {
+    let pris = false;
+    ["prenom","nom","tel","email","ville"].forEach(k => { if (!d[k] && cv.data[k]) { d[k] = cv.data[k]; pris = true; } });
+    const cl = cv.data.formation && cv.data.formation[0] && cv.data.formation[0].classe;
+    if (cl && CLASSES.some(c => c[0] === cl) && !(JSON.parse(localStorage.getItem(CLE) || "{}").classe)) { d.classe = cl; pris = true; }
+    $("#fromCv").hidden = !pris;
+  }
+} catch (e) {}
+/* entreprise transmise par « Mes pistes » */
+try {
+  const c = JSON.parse(localStorage.getItem("lettre-pfmp-cible") || "null");
+  if (c && c.entreprise) {
+    d.entreprise = c.entreprise; d.contact = c.contact || ""; if (c.champ) d.champ = c.champ;
+    if (c.debut) d.debut = c.debut; if (c.fin) d.fin = c.fin;
+    localStorage.removeItem("lettre-pfmp-cible");
+    $("#fromCible").textContent = "Lettre préparée pour " + c.entreprise + ", depuis tes pistes.";
+    $("#fromCible").hidden = false;
+  }
+} catch (e) {}
+function sauver(){ try { localStorage.setItem(CLE, JSON.stringify(d)); } catch (e) {} }
+
+/* ============ PANNEAU ============ */
+$("#classe").innerHTML = CLASSES.map(c => `<option>${c[0]}</option>`).join("");
+document.querySelectorAll("[data-k]").forEach(el => {
+  el.value = d[el.dataset.k] || "";
+  el.addEventListener("input", () => { d[el.dataset.k] = el.value; render(); });
+  el.addEventListener("change", () => { d[el.dataset.k] = el.value; render(); });
+});
+function segs(){
+  document.querySelectorAll("#genre button").forEach(b => b.classList.toggle("on", b.dataset.g === d.genre));
+  document.querySelectorAll("#champ button").forEach(b => b.classList.toggle("on", b.dataset.c === d.champ));
+}
+$("#genre").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; d.genre = b.dataset.g; listes(); render(); });
+$("#champ").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; d.champ = b.dataset.c; d.decouvrir = 0; listes(); render(); });
+const accorde = t => d.genre === "m" ? t.replace("reçu·e", "reçu") : t.replace("reçu·e", "reçue").replace("en tant que client", "en tant que cliente");
+function listes(){
+  segs();
+  $("#raisons").innerHTML = RAISONS.map((r, i) => `<label class="opt"><input type="radio" name="raison" value="${i}" ${d.raison === i ? "checked" : ""}> <span>… ${accorde(r)}.</span></label>`).join("")
+    + `<label class="opt"><input type="radio" name="raison" value="-2" ${d.raison === -2 ? "checked" : ""}> <span>Je l'écris moi-même</span></label>`;
+  $("#raisonPerso").style.display = d.raison === -2 ? "" : "none";
+  $("#decouvrir").innerHTML = DECOUVRIR[d.champ].map((t, i) => `<label class="opt"><input type="radio" name="dec" value="${i}" ${d.decouvrir === i ? "checked" : ""}> <span>J'aimerais y découvrir ${t}.</span></label>`).join("");
+  $("#qualites").innerHTML = QUALITES.map((q, i) => `<label class="chip"><input type="checkbox" value="${i}" ${d.qualites.includes(i) ? "checked" : ""}> ${d.genre === "m" ? q[1] : q[0]}</label>`).join("");
+}
+$("#raisons").addEventListener("change", e => { d.raison = +e.target.value; $("#raisonPerso").style.display = d.raison === -2 ? "" : "none"; if (d.raison === -2) $("#raisonPerso").focus(); render(); });
+$("#decouvrir").addEventListener("change", e => { d.decouvrir = +e.target.value; render(); });
+$("#qualites").addEventListener("change", e => {
+  const i = +e.target.value;
+  if (e.target.checked) { if (d.qualites.length >= 3) { e.target.checked = false; montre("#checkQual", "Trois qualités au maximum : décoche-en une pour en choisir une autre."); return; } d.qualites.push(i); }
+  else d.qualites = d.qualites.filter(x => x !== i);
+  render();
+});
+function montre(sel, t){ const el = $(sel); el.textContent = t; el.hidden = !t; }
+
+/* ============ LETTRE ============ */
+const esc = s => String(s || "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const vide = t => `<span class="vide">${t}</span>`;
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const dateLongue = v => { if (!v) return ""; const [y, m, j] = v.split("-").map(Number); const t = new Date(y, m - 1, j); return (j === 1 ? "1er" : j) + " " + t.toLocaleDateString("fr-FR", { month: "long", year: "numeric" }); };
+const dateCourte = v => { if (!v) return ""; const [y, m, j] = v.split("-").map(Number); return (j === 1 ? "1er" : j) + " " + new Date(y, m - 1, j).toLocaleDateString("fr-FR", { month: "long" }); };
+function raisonTexte(){
+  if (d.raison >= 0) return accorde(RAISONS[d.raison]);
+  if (d.raison === -2) { let t = d.raisonPerso.trim().replace(/^(parce que|car)\s+/i, "").replace(/[.\s]+$/, ""); return t ? t.charAt(0).toLowerCase() + t.slice(1) : ""; }
+  return "";
+}
+function qualitesTexte(){
+  const q = d.qualites.map(i => QUALITES[i]); if (!q.length) return "";
+  const adj = q.map(x => d.genre === "m" ? x[1] : x[0]);
+  const ill = q.map(x => x[3] ? (d.genre === "m" ? x[3] : x[2]) : x[2]);
+  const liste = adj.length === 1 ? adj[0] : adj.slice(0, -1).join(", ") + " et " + adj[adj.length - 1];
+  const phrases = ill.length === 1 ? ill[0] : ill.slice(0, -1).join(", ") + " et " + ill[ill.length - 1];
+  return cap(liste) + ", " + phrases + ".";
+}
+function morceaux(){
+  const cl = (CLASSES.find(c => c[0] === d.classe) || CLASSES[0])[1];
+  const ent = d.entreprise.trim();
+  const periode = d.debut && d.fin ? `du ${dateCourte(d.debut)} au ${dateLongue(d.fin)}` : "";
+  return {
+    objet: `Demande de période de formation ${periode}`.trim(),
+    p1: `Élève ${cl} au ${LYCEE}, je recherche une structure d'accueil pour ma période de formation en milieu professionnel ${periode}.`,
+    p2: raisonTexte() ? `${ent ? "Votre entreprise" : "Votre entreprise"} m'intéresse parce que ${raisonTexte()}. J'aimerais y découvrir ${DECOUVRIR[d.champ][d.decouvrir]}.` : "",
+    p3: qualitesTexte(),
+    p4: (d.genre ? SALUT[d.genre] : "") + (d.genre ? " " : "") + "Je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées."
+  };
+}
+function render(){
+  const m = morceaux(), nom = (d.prenom + " " + d.nom).trim();
+  const contact = [d.ville, d.tel, d.email].filter(Boolean).map(esc).join(" · ");
+  const today = new Date(), auj = (today.getDate() === 1 ? "1er" : today.getDate()) + " " + today.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+  $("#sheet").innerHTML = `
+    <div class="exp"><b>${nom ? esc(nom) : vide("Prénom Nom")}</b><br>${contact || vide("Ville · téléphone · e-mail")}</div>
+    <div class="dest">${d.entreprise ? esc(d.entreprise) : vide("Nom de l'entreprise")}${d.contact ? `<br>À l'attention de ${esc(d.contact)}` : ""}</div>
+    <div class="lieu">${d.ville ? esc(d.ville) : vide("Ville")}, le ${auj}</div>
+    <p class="obj"><b>Objet :</b> ${esc(m.objet)}</p>
+    <p>Madame, Monsieur,</p>
+    <p>${esc(m.p1)}</p>
+    <p>${m.p2 ? esc(m.p2) : vide("Choisis pourquoi cette entreprise t'intéresse.")}</p>
+    <p>${m.p3 ? esc(m.p3) : vide("Coche 2 ou 3 qualités.")}</p>
+    <p>${d.genre ? esc(m.p4) : vide("Choisis si tu signes au féminin ou au masculin.")}</p>
+    <div class="sign">${nom ? esc(nom) : vide("Prénom Nom")}</div>`;
+  montre("#checkRaison", d.raison === -2 && d.raisonPerso.trim().length > 0 && d.raisonPerso.trim().length < 15 ? "Ta raison est un peu courte : donne un détail précis sur cette entreprise." : "");
+  if (d.qualites.length < 3) montre("#checkQual", "");
+  ajuster(); sauver();
+}
+function ajuster(){
+  const sh = $("#sheet"), w = sh.parentElement; sh.style.transform = "";
+  const e = Math.min(1, w.clientWidth / sh.offsetWidth);
+  sh.style.transform = e < 1 ? `scale(${e})` : ""; sh.style.marginLeft = e < 1 ? "0" : "";
+  w.style.height = (sh.offsetHeight * e) + "px";
+}
+new ResizeObserver(() => ajuster()).observe($(".preview-area"));
+function texteMail(){
+  const m = morceaux(), nom = (d.prenom + " " + d.nom).trim();
+  return ["Madame, Monsieur,", m.p1, m.p2, m.p3, m.p4, nom, [d.tel, d.email].filter(Boolean).join(" · ")].filter(Boolean).join("\n\n");
+}
+$("#printBtn").onclick = () => { try { window.print(); } catch (e) {} };
+$("#copyBtn").onclick = () => {
+  const ok = () => { $("#msg").textContent = "Texte copié : colle-le dans ton mail."; };
+  if (navigator.clipboard) navigator.clipboard.writeText(texteMail()).then(ok, () => { $("#msg").textContent = "Copie impossible : sélectionne le texte de la lettre."; });
+};
+const rb = $("#resetBtn");
+rb.onclick = () => {
+  if (rb.dataset.ok !== "1") { rb.dataset.ok = "1"; rb.textContent = "Confirmer : tout effacer"; setTimeout(() => { rb.dataset.ok = ""; rb.textContent = "Effacer ma lettre"; }, 4000); return; }
+  try { localStorage.removeItem(CLE); } catch (e) {} location.reload();
+};
+listes(); render();
+}
+</script>
+</body>
+</html>
